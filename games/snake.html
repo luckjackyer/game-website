@@ -133,6 +133,7 @@
         let gameStarted = false;
         let animationId = null;
         let gameSpeed = 10;
+        let lastRenderTime = 0;
 
         // 蛇
         let snake = [
@@ -147,31 +148,30 @@
             y: 15
         };
 
-        // 绘制蛇
+        // 绘制蛇 - 修复版本
         function drawSnake() {
             snake.forEach((segment, index) => {
-                // 蛇头
                 if (index === 0) {
+                    // 蛇头
                     ctx.fillStyle = '#00ff00';
                     ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
                     
                     // 眼睛
                     ctx.fillStyle = 'black';
                     const eyeSize = 3;
-                    const eyeOffset = 5;
                     
                     if (dx === 1) { // 向右
-                        ctx.fillRect(segment.x * gridSize + gridSize - eyeOffset, segment.y * gridSize + eyeOffset, eyeSize, eyeSize);
-                        ctx.fillRect(segment.x * gridSize + gridSize - eyeOffset, segment.y * gridSize + gridSize - eyeOffset - eyeSize, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + gridSize - 5, segment.y * gridSize + 5, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + gridSize - 5, segment.y * gridSize + gridSize - 8, eyeSize, eyeSize);
                     } else if (dx === -1) { // 向左
-                        ctx.fillRect(segment.x * gridSize + eyeOffset - eyeSize, segment.y * gridSize + eyeOffset, eyeSize, eyeSize);
-                        ctx.fillRect(segment.x * gridSize + eyeOffset - eyeSize, segment.y * gridSize + gridSize - eyeOffset - eyeSize, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + 2, segment.y * gridSize + 5, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + 2, segment.y * gridSize + gridSize - 8, eyeSize, eyeSize);
                     } else if (dy === -1) { // 向上
-                        ctx.fillRect(segment.x * gridSize + eyeOffset, segment.y * gridSize + eyeOffset - eyeSize, eyeSize, eyeSize);
-                        ctx.fillRect(segment.x * gridSize + gridSize - eyeOffset - eyeSize, segment.y * gridSize + eyeOffset - eyeSize, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + 5, segment.y * gridSize + 2, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + gridSize - 8, segment.y * gridSize + 2, eyeSize, eyeSize);
                     } else if (dy === 1) { // 向下
-                        ctx.fillRect(segment.x * gridSize + eyeOffset, segment.y * gridSize + gridSize - eyeOffset, eyeSize, eyeSize);
-                        ctx.fillRect(segment.x * gridSize + gridSize - eyeOffset - eyeSize, segment.y * gridSize + gridSize - eyeOffset, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + 5, segment.y * gridSize + gridSize - 5, eyeSize, eyeSize);
+                        ctx.fillRect(segment.x * gridSize + gridSize - 8, segment.y * gridSize + gridSize - 5, eyeSize, eyeSize);
                     }
                 } else {
                     // 蛇身
@@ -207,7 +207,7 @@
             }
         }
 
-        // 更新蛇位置
+        // 更新蛇位置 - 修复版本
         function updateSnake() {
             if (!gameStarted) return;
 
@@ -245,8 +245,8 @@
             }
         }
 
-        // 游戏循环
-        function gameLoop() {
+        // 游戏循环 - 修复版本
+        function gameLoop(currentTime = 0) {
             if (gameOver) {
                 finalScoreElement.textContent = score;
                 finalHighScoreElement.textContent = leaderboard.getHighScore();
@@ -273,15 +273,19 @@
                 ctx.stroke();
             }
 
-            updateSnake();
+            // 只有在游戏开始后更新蛇位置
+            if (gameStarted) {
+                const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
+                if (secondsSinceLastRender >= 1 / gameSpeed) {
+                    updateSnake();
+                    lastRenderTime = currentTime;
+                }
+            }
+
             drawFood();
             drawSnake();
 
-            if (gameStarted) {
-                animationId = setTimeout(() => {
-                    requestAnimationFrame(gameLoop);
-                }, 1000 / gameSpeed);
-            } else {
+            if (!gameStarted) {
                 // 显示开始提示
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -289,7 +293,11 @@
                 ctx.font = '24px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText('点击开始游戏', canvas.width / 2, canvas.height / 2);
+                ctx.font = '16px Arial';
+                ctx.fillText('或使用方向键/WASD开始', canvas.width / 2, canvas.height / 2 + 30);
             }
+
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         // 重新开始游戏
@@ -306,8 +314,9 @@
             gameOverModal.classList.remove('active');
             
             if (animationId) {
-                clearTimeout(animationId);
+                cancelAnimationFrame(animationId);
             }
+            lastRenderTime = 0;
             gameLoop();
         }
 
@@ -319,7 +328,7 @@
             gameOverModal.classList.remove('active');
         }
 
-        // 键盘控制
+        // 键盘控制 - 修复版本
         document.addEventListener('keydown', (e) => {
             // 防止蛇直接反向
             if ((e.code === 'ArrowUp' || e.code === 'KeyW') && dy === 0) {
@@ -353,7 +362,7 @@
             }
         });
 
-        // 触摸控制
+        // 触摸控制 - 修复版本
         let touchStartX = 0;
         let touchStartY = 0;
         
@@ -371,6 +380,8 @@
 
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
+            if (!gameStarted || gameOver) return;
+            
             const touchX = e.touches[0].clientX;
             const touchY = e.touches[0].clientY;
             
@@ -378,18 +389,18 @@
             const diffY = touchY - touchStartY;
             
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 0 && dx === 0) {
+                if (diffX > 20 && dx === 0) {
                     dx = 1;
                     dy = 0;
-                } else if (diffX < 0 && dx === 0) {
+                } else if (diffX < -20 && dx === 0) {
                     dx = -1;
                     dy = 0;
                 }
             } else {
-                if (diffY > 0 && dy === 0) {
+                if (diffY > 20 && dy === 0) {
                     dy = 1;
                     dx = 0;
-                } else if (diffY < 0 && dy === 0) {
+                } else if (diffY < -20 && dy === 0) {
                     dy = -1;
                     dx = 0;
                 }

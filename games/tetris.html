@@ -191,10 +191,10 @@
         let level = 1;
         let lines = 0;
         let gameOver = false;
-        let animationId = null;
         let dropInterval = 1000;
         let dropCounter = 0;
         let lastTime = 0;
+        let animationId = null;
 
         // 当前方块
         let piece = {
@@ -210,6 +210,29 @@
         // 游戏板
         let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
+        // 碰撞检测 - 修复版本
+        function collide(pieceX, pieceY, pieceShape) {
+            for (let y = 0; y < pieceShape.length; y++) {
+                for (let x = 0; x < pieceShape[y].length; x++) {
+                    if (pieceShape[y][x]) {
+                        const newX = pieceX + x;
+                        const newY = pieceY + y;
+                        
+                        // 检查边界
+                        if (newX < 0 || newX >= COLS || newY >= ROWS) {
+                            return true;
+                        }
+                        
+                        // 检查是否碰到已固定的方块
+                        if (newY >= 0 && board[newY][newX]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         // 绘制方块
         function drawBlock(ctx, x, y, color) {
             ctx.fillStyle = color;
@@ -223,24 +246,24 @@
 
         // 绘制游戏板
         function drawBoard() {
-            board.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
-                        drawBlock(ctx, x, y, COLORS[value - 1]);
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (board[y][x]) {
+                        drawBlock(ctx, x, y, COLORS[board[y][x] - 1]);
                     }
-                });
-            });
+                }
+            }
         }
 
         // 绘制当前方块
         function drawPiece() {
-            piece.shape.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
+            for (let y = 0; y < piece.shape.length; y++) {
+                for (let x = 0; x < piece.shape[y].length; x++) {
+                    if (piece.shape[y][x]) {
                         drawBlock(ctx, piece.x + x, piece.y + y, piece.color);
                     }
-                });
-            });
+                }
+            }
         }
 
         // 绘制下一个方块
@@ -253,34 +276,22 @@
             const offsetX = (nextCanvas.width / BLOCK_SIZE - nextPiece.shape[0].length) / 2;
             const offsetY = (nextCanvas.height / BLOCK_SIZE - nextPiece.shape.length) / 2;
             
-            nextPiece.shape.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
+            for (let y = 0; y < nextPiece.shape.length; y++) {
+                for (let x = 0; x < nextPiece.shape[y].length; x++) {
+                    if (nextPiece.shape[y][x]) {
                         nextCtx.fillStyle = nextPiece.color;
                         nextCtx.fillRect((offsetX + x) * BLOCK_SIZE, (offsetY + y) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
                     }
-                });
-            });
+                }
+            }
         }
 
-        // 碰撞检测
-        function collide() {
-            return piece.shape.some((row, y) => {
-                return row.some((value, x) => {
-                    return value && (board[y + piece.y + 1] && board[y + piece.y + 1][x + piece.x]) || 
-                           y + piece.y + 1 >= ROWS ||
-                           x + piece.x < 0 ||
-                           x + piece.x >= COLS;
-                });
-            });
-        }
-
-        // 移动方块
+        // 移动方块 - 修复版本
         function movePiece(dx, dy) {
             piece.x += dx;
             piece.y += dy;
             
-            if (collide()) {
+            if (collide(piece.x, piece.y, piece.shape)) {
                 piece.x -= dx;
                 piece.y -= dy;
                 return false;
@@ -288,7 +299,7 @@
             return true;
         }
 
-        // 旋转方块
+        // 旋转方块 - 修复版本
         function rotatePiece() {
             const rotated = piece.shape[0].map((_, i) => 
                 piece.shape.map(row => row[i]).reverse()
@@ -297,7 +308,7 @@
             const originalShape = piece.shape;
             piece.shape = rotated;
             
-            if (collide()) {
+            if (collide(piece.x, piece.y, piece.shape)) {
                 piece.shape = originalShape;
                 return false;
             }
@@ -307,29 +318,28 @@
 
         // 固定方块到游戏板
         function mergePiece() {
-            piece.shape.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
-                        board[y + piece.y][x + piece.x] = COLORS.indexOf(piece.color) + 1;
+            for (let y = 0; y < piece.shape.length; y++) {
+                for (let x = 0; x < piece.shape[y].length; x++) {
+                    if (piece.shape[y][x]) {
+                        if (piece.y + y >= 0) {
+                            board[piece.y + y][piece.x + x] = COLORS.indexOf(piece.color) + 1;
+                        }
                     }
-                });
-            });
+                }
+            }
         }
 
         // 清除完整的行
         function clearLines() {
             let linesCleared = 0;
             
-            board = board.filter(row => {
-                if (row.every(cell => cell !== 0)) {
+            for (let y = ROWS - 1; y >= 0; y--) {
+                if (board[y].every(cell => cell !== 0)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(COLS).fill(0));
                     linesCleared++;
-                    return false;
+                    y++; // 重新检查当前行
                 }
-                return true;
-            });
-            
-            while (board.length < ROWS) {
-                board.unshift(Array(COLS).fill(0));
             }
             
             if (linesCleared > 0) {
@@ -369,13 +379,13 @@
             
             drawNextPiece();
             
-            if (collide()) {
+            if (collide(piece.x, piece.y, piece.shape)) {
                 gameOver = true;
                 soundManager.play('lose');
             }
         }
 
-        // 游戏循环
+        // 游戏循环 - 修复版本
         function gameLoop(time = 0) {
             if (gameOver) {
                 finalScoreElement.textContent = score;
@@ -390,7 +400,11 @@
             dropCounter += deltaTime;
             
             if (dropCounter > dropInterval) {
-                movePiece(0, 1);
+                if (!movePiece(0, 1)) {
+                    mergePiece();
+                    clearLines();
+                    newPiece();
+                }
                 dropCounter = 0;
             }
 
