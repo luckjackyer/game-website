@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大球吃小球 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin:0;
+            padding:0;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: #0f3460;
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+            display: block;
+            margin: 20px auto;
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 14px;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin: 20px 0;">🎯 大球吃小球</h1>
+        <div class="info">
+            <span>分数: <span id="score">0</span></span> | 
+            <span>质量: <span id="mass">20</span></span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="mobile-controls">
+            📱 移动鼠标或手指控制方向，靠近小球吃掉它们！
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布大小
+        canvas.width = Math.min(800, window.innerWidth - 40);
+        canvas.height = Math.min(600, window.innerHeight - 150);
+        
+        let score = 0;
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 20,
+            speed: 3,
+            color: '#00ff88'
+        };
+        
+        const foods = [];
+        const enemies = [];
+        let mouseX = player.x;
+        let mouseY = player.y;
+        
+        // 鼠标/触摸控制
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        });
+        
+        // 生成食物
+        function spawnFood() {
+            foods.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 3 + Math.random() * 5,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`
+            });
+        }
+        
+        // 生成敌人
+        function spawnEnemy() {
+            const radius = 10 + Math.random() * 30;
+            enemies.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: radius,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                dx: (Math.random() - 0.5) * 2,
+                dy: (Math.random() - 0.5) * 2
+            });
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            // 清空画布
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 玩家移动（朝向鼠标）
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 5) {
+                player.x += (dx / dist) * player.speed;
+                player.y += (dy / dist) * player.speed;
+            }
+            
+            // 边界检查
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            
+            // 生成食物和敌人
+            if (foods.length < 50) spawnFood();
+            if (enemies.length < 5) spawnEnemy();
+            
+            // 绘制食物
+            foods.forEach((food, index) => {
+                ctx.fillStyle = food.color;
+                ctx.beginPath();
+                ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 碰撞检测：玩家 vs 食物
+                const dist = Math.sqrt(
+                    Math.pow(player.x - food.x, 2) + 
+                    Math.pow(player.y - food.y, 2)
+                );
+                
+                if (dist < player.radius + food.radius) {
+                    foods.splice(index, 1);
+                    player.radius += 0.5;
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    document.getElementById('mass').textContent = Math.floor(player.radius);
+                }
+            });
+            
+            // 更新和绘制敌人
+            enemies.forEach((enemy, index) => {
+                enemy.x += enemy.dx;
+                enemy.y += enemy.dy;
+                
+                // 边界反弹
+                if (enemy.x < enemy.radius || enemy.x > canvas.width - enemy.radius) {
+                    enemy.dx *= -1;
+                }
+                if (enemy.y < enemy.radius || enemy.y > canvas.height - enemy.radius) {
+                    enemy.dy *= -1;
+                }
+                
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 碰撞检测：玩家 vs 敌人
+                const dist = Math.sqrt(
+                    Math.pow(player.x - enemy.x, 2) + 
+                    Math.pow(player.y - enemy.y, 2)
+                );
+                
+                if (dist < player.radius + enemy.radius) {
+                    if (player.radius > enemy.radius) {
+                        // 玩家吃掉敌人
+                        enemies.splice(index, 1);
+                        player.radius += enemy.radius * 0.3;
+                        score += Math.floor(enemy.radius);
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('mass').textContent = Math.floor(player.radius);
+                    } else {
+                        // 玩家被吃掉
+                        alert(`游戏结束！最终分数: ${score}`);
+                        location.reload();
+                    }
+                }
+            });
+            
+            // 绘制玩家
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 玩家眼睛
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(player.x - player.radius * 0.3, player.y - player.radius * 0.3, player.radius * 0.3, 0, Math.PI * 2);
+            ctx.arc(player.x + player.radius * 0.3, player.y - player.radius * 0.3, player.radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
