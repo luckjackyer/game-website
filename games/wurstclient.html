@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方块跳跃 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: linear-gradient(to bottom, #0f3460, #16213e);
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin-bottom: 20px;">🏃 方块跳跃</h1>
+        <div class="info">
+            <span>分数: <span id="score">0</span></span> | 
+            <span>最高: <span id="highScore">0</span></span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <p style="color: #888; margin-top: 20px;">点击屏幕或按空格键跳跃，避开障碍物！</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let score = 0;
+        let highScore = localStorage.getItem('blockJumpHighScore') || 0;
+        document.getElementById('highScore').textContent = highScore;
+        
+        const player = {
+            x: 100,
+            y: canvas.height - 50,
+            width: 30,
+            height: 30,
+            velocityY: 0,
+            jumpPower: -15,
+            gravity: 0.8,
+            isJumping: false,
+            color: '#e94560'
+        };
+        
+        const obstacles = [];
+        let gameSpeed = 5;
+        let gameOver = false;
+        let frameCount = 0;
+        
+        // 触摸/点击控制
+        canvas.addEventListener('click', () => {
+            if (!gameOver && !player.isJumping) {
+                player.velocityY = player.jumpPower;
+                player.isJumping = true;
+            } else if (gameOver) {
+                resetGame();
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !gameOver && !player.isJumping) {
+                player.velocityY = player.jumpPower;
+                player.isJumping = true;
+            } else if (e.code === 'Space' && gameOver) {
+                resetGame();
+            }
+        });
+        
+        // 生成障碍物
+        function spawnObstacle() {
+            const height = 30 + Math.random() * 50;
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - height,
+                width: 30,
+                height: height,
+                color: '#0f3460'
+            });
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            score = 0;
+            gameSpeed = 5;
+            gameOver = false;
+            obstacles.length = 0;
+            player.y = canvas.height - 50;
+            player.velocityY = 0;
+            player.isJumping = false;
+            frameCount = 0;
+            document.getElementById('score').textContent = score;
+            gameLoop();
+        }
+        
+        // 碰撞检测
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            if (gameOver) return;
+            
+            // 清空画布
+            ctx.fillStyle = '#16213e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制地面
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+            
+            // 玩家物理
+            player.velocityY += player.gravity;
+            player.y += player.velocityY;
+            
+            if (player.y > canvas.height - player.height - 20) {
+                player.y = canvas.height - player.height - 20;
+                player.isJumping = false;
+                player.velocityY = 0;
+            }
+            
+            // 绘制玩家
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // 生成障碍物
+            frameCount++;
+            if (frameCount % 120 === 0) {
+                spawnObstacle();
+            }
+            
+            // 更新障碍物
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+                
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('blockJumpHighScore', highScore);
+                        document.getElementById('highScore').textContent = highScore;
+                    }
+                    
+                    // 加速
+                    if (score % 10 === 0) {
+                        gameSpeed += 0.5;
+                    }
+                    continue;
+                }
+                
+                // 碰撞检测
+                if (checkCollision(player, obstacles[i])) {
+                    gameOver = true;
+                    alert(`游戏结束！分数: ${score}`);
+                    break;
+                }
+                
+                // 绘制障碍物
+                ctx.fillStyle = obstacles[i].color;
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
