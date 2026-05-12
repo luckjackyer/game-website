@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经典小游戏 - 开心小游戏</title>
+    <meta name="description" content="免费在线经典小游戏，俄罗斯方块、贪吃蛇、扫雷等，即开即玩！">
+    <link rel="canonical" href="https://game-website.liage20061111.workers.dev/classic-games.html">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .category-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+        .category-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .game-count {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .search-box {
+            max-width: 600px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-box input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .search-box button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎮 开心小游戏</h1>
+            <p class="slogan">免费在线小游戏，即开即玩</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="category-header">
+            <h1>🎲 经典小游戏</h1>
+            <p class="game-count">共 <span id="gameCount">10</span> 款游戏</p>
+            <div class="search-box">
+                <input type="text" id="gameSearch" placeholder="搜索经典游戏..." onkeyup="filterGames()">
+                <button onclick="clearSearch()">✕</button>
+            </div>
+        </div>
+
+        <section class="games-grid" id="gamesGrid">
+            <a href="games/tetris.html" class="game-card" data-tags="益智,经典">
+                <div class="game-icon">🎲</div>
+                <h2>俄罗斯方块</h2>
+                <p>旋转方块，消除行数，挑战最高分</p>
+                <span class="play-btn">开始游戏</span>
+                <span class="game-tag">🔥热门</span>
+            </a>
+
+            <a href="games/snake.html" class="game-card" data-tags="休闲,经典">
+                <div class="game-icon">🐍</div>
+                <h2>贪吃蛇</h2>
+                <p>控制蛇吃食物长大，避免撞墙和撞到自己</p>
+                <span class="play-btn">开始游戏</span>
+                <span class="game-tag">🔥热门</span>
+            </a>
+
+            <a href="games/breakout.html" class="game-card" data-tags="动作,经典">
+                <div class="game-icon">⚽</div>
+                <h2>弹球达人</h2>
+                <p>控制挡板反弹小球，击碎所有砖块</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/runner.html" class="game-card" data-tags="动作,跑酷">
+                <div class="game-icon">🏃</div>
+                <h2>极速跑酷</h2>
+                <p>躲避障碍物，挑战最高分</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/plane.html" class="game-card" data-tags="射击,经典">
+                <div class="game-icon">✈️</div>
+                <h2>飞机大战</h2>
+                <p>经典飞行射击游戏，躲避子弹，击落敌机</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/2048.html" class="game-card" data-tags="益智,数字">
+                <div class="game-icon">🔢</div>
+                <h2>2048</h2>
+                <p>滑动方块，合并相同数字，挑战2048！</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/minesweeper.html" class="game-card" data-tags="益智,策略">
+                <div class="game-icon">💣</div>
+                <h2>扫雷</h2>
+                <p>经典扫雷游戏，挑战你的推理能力</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/sudoku.html" class="game-card" data-tags="益智,数字">
+                <div class="game-icon">🔢</div>
+                <h2>数独</h2>
+                <p>逻辑推理，填入1-9，完成数独谜题</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/timeshooter3.html" class="game-card" data-tags="射击,创意">
+                <div class="game-icon">⏱️</div>
+                <h2>时间射击3</h2>
+                <p>在时间停止的世界中战斗，爽快射击！</p>
+                <span class="play-btn">开始游戏</span>
+                <span class="game-tag">🆕新游戏</span>
+            </a>
+
+            <a href="games/wurstclient.html" class="game-card" data-tags="休闲,复古">
+                <div class="game-icon">🧩</div>
+                <h2>Wurst客户端</h2>
+                <p>经典游戏客户端，复古游戏体验！</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+        </section>
+
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="index.html" class="back-link">← 返回首页</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 开心小游戏 - 免费在线小游戏平台</p>
+        </div>
+    </footer>
+
+    <script>
+        function filterGames() {
+            const search = document.getElementById('gameSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.game-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                const desc = card.querySelector('p').textContent.toLowerCase();
+                const tags = card.getAttribute('data-tags').toLowerCase();
+
+                if (title.includes(search) || desc.includes(search) || tags.includes(search)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.getElementById('gameCount').textContent = visibleCount;
+        }
+
+        function clearSearch() {
+            document.getElementById('gameSearch').value = '';
+            filterGames();
+        }
+    </script>
+</body>
+</html>
