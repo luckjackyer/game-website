@@ -1,0 +1,17 @@
+# robots.txt for game-website
+# https://game-website.liage20061111.workers.dev/
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://game-website.liage20061111.workers.dev/sitemap.xml
+
+# Disallow admin or private paths (if any)
+Disallow: /admin/
+Disallow: /private/
+
+# Allow all game pages to be crawled
+Allow: /games/
+Allow: /index.html
+Allow: /privacy-policy.html
