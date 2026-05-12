@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krunker.io - 浏览器FPS射击游戏 | 免费在线玩</title>
+  <meta name="description" content="玩Krunker风格FPS射击游戏，免费浏览器游戏，无需下载，即点即玩！">
+  <link rel="stylesheet" href="../css/game.css">
+  <style>
+    #gameCanvas {
+      background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+    }
+    .player {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #00f;
+      border-radius: 50%;
+    }
+    .enemy {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #f00;
+      border-radius: 50%;
+    }
+    .bullet {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: #ff0;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Krunker.io - FPS射击游戏</h1>
+    <div class="game-info">
+      <p>🎮 控制瞄准，点击射击，消灭敌人！</p>
+      <p>🏆 击杀数: <span id="kills">0</span> | 准确度: <span id="accuracy">100</span>%</p>
+    </div>
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="controls">
+      <p><strong>操作说明:</strong> 鼠标瞄准 + 左键射击 | WASD移动 | R换弹 | 空格跳跃</p>
+    </div>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+  </div>
+  
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let kills = 0;
+    let shotsFired = 0;
+    let shotsHit = 0;
+    let ammo = 30;
+    let isReloading = false;
+    
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      size: 20,
+      speed: 5,
+      color: '#00f'
+    };
+    
+    const enemies = [];
+    const bullets = [];
+    let mouseX = 0, mouseY = 0;
+    let keys = {};
+    
+    // 生成敌人
+    function spawnEnemy() {
+      if (enemies.length < 10) {
+        enemies.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: 20,
+          speed: 1 + Math.random() * 2,
+          color: '#f00',
+          lastShot: 0
+        });
+      }
+    }
+    
+    // 射击
+    function shoot() {
+      if (ammo <= 0) {
+        reload();
+        return;
+      }
+      
+      const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * 10,
+        vy: Math.sin(angle) * 10,
+        color: '#ff0'
+      });
+      
+      ammo--;
+      shotsFired++;
+    }
+    
+    function reload() {
+      if (isReloading) return;
+      isReloading = true;
+      setTimeout(() => {
+        ammo = 30;
+        isReloading = false;
+      }, 1500);
+    }
+    
+    // 更新游戏
+    function update() {
+      // 玩家移动
+      if (keys['w'] || keys['ArrowUp']) player.y -= player.speed;
+      if (keys['s'] || keys['ArrowDown']) player.y += player.speed;
+      if (keys['a'] || keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['d'] || keys['ArrowRight']) player.x += player.speed;
+      
+      // 边界检查
+      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+      
+      // 更新子弹
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].x += bullets[i].vx;
+        bullets[i].y += bullets[i].vy;
+        
+        // 移除屏幕外子弹
+        if (bullets[i].x < 0 || bullets[i].x > canvas.width || 
+            bullets[i].y < 0 || bullets[i].y > canvas.height) {
+          bullets.splice(i, 1);
+          continue;
+        }
+        
+        // 检测击中敌人
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const dx = bullets[i].x - enemies[j].x;
+          const dy = bullets[i].y - enemies[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < enemies[j].size) {
+            enemies.splice(j, 1);
+            bullets.splice(i, 1);
+            kills++;
+            shotsHit++;
+            document.getElementById('kills').textContent = kills;
+            break;
+          }
+        }
+      }
+      
+      // 更新敌人
+      const now = Date.now();
+      enemies.forEach(enemy => {
+        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+        enemy.x += Math.cos(angle) * enemy.speed;
+        enemy.y += Math.sin(angle) * enemy.speed;
+        
+        // 敌人射击
+        if (now - enemy.lastShot > 2000) {
+          const bulletAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+          bullets.push({
+            x: enemy.x,
+            y: enemy.y,
+            vx: Math.cos(bulletAngle) * 5,
+            vy: Math.sin(bulletAngle) * 5,
+            color: '#f88'
+          });
+          enemy.lastShot = now;
+        }
+        
+        // 检测敌人碰撞玩家
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < enemy.size + player.size) {
+          alert(`游戏结束！击杀数: ${kills}`);
+          location.reload();
+        }
+      });
+      
+      // 更新准确度
+      const accuracy = shotsFired > 0 ? Math.round((shotsHit / shotsFired) * 100) : 100;
+      document.getElementById('accuracy').textContent = accuracy;
+    }
+    
+    // 渲染
+    function render() {
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 绘制网格背景
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      for (let x = 0; x < canvas.width; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      
+      // 绘制子弹
+      bullets.forEach(bullet => {
+        ctx.fillStyle = bullet.color;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      // 绘制敌人
+      enemies.forEach(enemy => {
+        ctx.fillStyle = enemy.color;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 敌人准星
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.size + 5, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      
+      // 绘制玩家
+      ctx.fillStyle = player.color;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 绘制枪管（指向鼠标）
+      const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(player.x, player.y);
+      ctx.lineTo(
+        player.x + Math.cos(angle) * 30,
+        player.y + Math.sin(angle) * 30
+      );
+      ctx.stroke();
+      
+      // 弹药显示
+      ctx.fillStyle = '#000';
+      ctx.font = '16px Arial';
+      ctx.fillText(`弹药: ${ammo}/30`, 10, 20);
+      if (isReloading) {
+        ctx.fillText('装弹中...', 10, 40);
+      }
+    }
+    
+    // 游戏循环
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+    
+    // 事件监听
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    
+    canvas.addEventListener('click', (e) => {
+      if (!isReloading) shoot();
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.key === 'r' || e.key === 'R') reload();
+    });
+    
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+    
+    // 定时生成敌人
+    setInterval(spawnEnemy, 2000);
+    
+    // 初始化
+    for (let i = 0; i < 5; i++) {
+      spawnEnemy();
+    }
+    
+    gameLoop();
+  </script>
+</body>
+</html>
