@@ -1,0 +1,18 @@
+# ads.txt - Authorized Digital Sellers
+# This file is required by Google AdSense and other ad networks
+# It helps prevent ad fraud by declaring authorized sellers of your ad inventory
+
+# Google AdSense
+# Replace PUB-ID with your actual AdSense Publisher ID (e.g., pub-1234567890123456)
+# Contact: your-email@example.com
+
+# Format: <Field 1>: Domain name of the advertising system
+#          <Field 2>: Publisher's Account ID
+#          <Field 3>: Type of account/relationship (DIRECT or RESELLER)
+#          <Field 4>: Certification Authority ID (optional)
+
+# Example (uncomment and modify after getting AdSense approval):
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+
+# Note: This file will be updated after AdSense approval
+# Temporary placeholder - update with real AdSense ID after approval
