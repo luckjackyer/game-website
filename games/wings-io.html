@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞行大作战 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin:0;
+            padding:0;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: linear-gradient(to bottom, #0a0a1a, #1a1a3a);
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+            display: block;
+            margin: 20px auto;
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin: 20px 0;">✈️ 飞行大作战</h1>
+        <div class="info">
+            <span>分数: <span id="score">0</span></span> | 
+            <span>击杀: <span id="kills">0</span></span> | 
+            <span>生存: <span id="survival">0</span>s</span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = Math.min(1000, window.innerWidth - 40);
+        canvas.height = Math.min(600, window.innerHeight - 150);
+        
+        let score = 0;
+        let kills = 0;
+        let startTime = Date.now();
+        
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 15,
+            speed: 4,
+            angle: 0,
+            color: '#00ff88',
+            health: 100,
+            maxHealth: 100,
+            bullets: []
+        };
+        
+        const enemies = [];
+        const particles = [];
+        let mouseX = player.x;
+        let mouseY = player.y;
+        
+        // 鼠标控制
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+        });
+        
+        canvas.addEventListener('click', () => {
+            player.bullets.push({
+                x: player.x + Math.cos(player.angle) * player.radius,
+                y: player.y + Math.sin(player.angle) * player.radius,
+                dx: Math.cos(player.angle) * 8,
+                dy: Math.sin(player.angle) * 8,
+                radius: 4
+            });
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+            player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+            player.bullets.push({
+                x: player.x + Math.cos(player.angle) * player.radius,
+                y: player.y + Math.sin(player.angle) * player.radius,
+                dx: Math.cos(player.angle) * 8,
+                dy: Math.sin(player.angle) * 8,
+                radius: 4
+            });
+        });
+        
+        // 生成敌人
+        function spawnEnemy() {
+            const types = ['scout', 'fighter', 'bomber'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let speed, health, radius, color;
+            switch(type) {
+                case 'scout':
+                    speed = 3;
+                    health = 30;
+                    radius = 10;
+                    color = '#ff6b6b';
+                    break;
+                case 'fighter':
+                    speed = 2;
+                    health = 60;
+                    radius = 15;
+                    color = '#ffe66d';
+                    break;
+                case 'bomber':
+                    speed = 1.5;
+                    health = 100;
+                    radius = 20;
+                    color = '#4ecdc4';
+                    break;
+            }
+            
+            let x, y;
+            if (Math.random() < 0.5) {
+                x = Math.random() < 0.5 ? -50 : canvas.width + 50;
+                y = Math.random() * canvas.height;
+            } else {
+                x = Math.random() * canvas.width;
+                y = Math.random() < 0.5 ? -50 : canvas.height + 50;
+            }
+            
+            enemies.push({
+                x: x,
+                y: y,
+                radius: radius,
+                speed: speed,
+                health: health,
+                maxHealth: health,
+                color: color,
+                type: type,
+                angle: 0,
+                lastShot: 0
+            });
+        }
+        
+        // 生成粒子
+        function spawnParticles(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    dx: (Math.random() - 0.5) * 8,
+                    dy: (Math.random() - 0.5) * 8,
+                    radius: Math.random() * 3 + 1,
+                    color: color,
+                    life: 30
+                });
+            }
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            // 清空画布
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制星星背景
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 50; i++) {
+                const x = (Date.now() / 50 + i * 37) % canvas.width;
+                const y = (i * 73) % canvas.height;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            
+            // 更新生存时间
+            const survival = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('survival').textContent = survival;
+            
+            // 玩家移动（朝向鼠标）
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > player.radius + 10) {
+                player.x += (dx / dist) * Math.min(player.speed, dist);
+                player.y += (dy / dist) * Math.min(player.speed, dist);
+            }
+            
+            // 边界检查
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            
+            // 生成敌人
+            if (enemies.length < 8) {
+                spawnEnemy();
+            }
+            
+            // 更新玩家子弹
+            for (let i = player.bullets.length - 1; i >= 0; i--) {
+                player.bullets[i].x += player.bullets[i].dx;
+                player.bullets[i].y += player.bullets[i].dy;
+                
+                if (player.bullets[i].x < 0 || player.bullets[i].x > canvas.width || 
+                    player.bullets[i].y < 0 || player.bullets[i].y > canvas.height) {
+                    player.bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // 绘制玩家子弹
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(player.bullets[i].x, player.bullets[i].y, player.bullets[i].radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 更新敌人
+            enemies.forEach((enemy, eIndex) => {
+                // AI：朝向玩家移动
+                const edx = player.x - enemy.x;
+                const edy = player.y - enemy.y;
+                const edist = Math.sqrt(edx * edx + edy * edy);
+                
+                if (edist > enemy.radius + player.radius + 50) {
+                    enemy.angle = Math.atan2(edy, edx);
+                    enemy.x += Math.cos(enemy.angle) * enemy.speed;
+                    enemy.y += Math.sin(enemy.angle) * enemy.speed;
+                }
+                
+                // 敌人射击
+                enemy.lastShot++;
+                if (enemy.type === 'fighter' && edist < 300 && enemy.lastShot > 30) {
+                    enemies.forEach(e => {
+                        if (e === enemy) return;
+                        const fdx = e.x - enemy.x;
+                        const fdy = e.y - enemy.y;
+                        const fdist = Math.sqrt(fdx * fdx + fdy * fdy);
+                        if (fdist < 150) {
+                            // 躲避友军
+                            enemy.x -= Math.cos(enemy.angle) * enemy.speed * 2;
+                            enemy.y -= Math.sin(enemy.angle) * enemy.speed * 2;
+                        }
+                    });
+                    
+                    player.bullets.push({
+                        x: enemy.x,
+                        y: enemy.y,
+                        dx: (edx / edist) * 5,
+                        dy: (edy / edist) * 5,
+                        radius: 3
+                    });
+                    enemy.lastShot = 0;
+                }
+                
+                // 边界检查
+                enemy.x = Math.max(enemy.radius, Math.min(canvas.width - enemy.radius, enemy.x));
+                enemy.y = Math.max(enemy.radius, Math.min(canvas.height - enemy.radius, enemy.y));
+                
+                // 碰撞检测：玩家子弹 vs 敌人
+                for (let i = player.bullets.length - 1; i >= 0; i--) {
+                    const bdx = player.bullets[i].x - enemy.x;
+                    const bdy = player.bullets[i].y - enemy.y;
+                    const bdist = Math.sqrt(bdx * bdx + bdy * bdy);
+                    
+                    if (bdist < enemy.radius + player.bullets[i].radius) {
+                        enemy.health -= 10;
+                        spawnParticles(player.bullets[i].x, player.bullets[i].y, 3, '#ffff00');
+                        player.bullets.splice(i, 1);
+                        
+                        if (enemy.health <= 0) {
+                            spawnParticles(enemy.x, enemy.y, 15, enemy.color);
+                            enemies.splice(eIndex, 1);
+                            score += 10;
+                            kills++;
+                            document.getElementById('score').textContent = score;
+                            document.getElementById('kills').textContent = kills;
+                        }
+                        break;
+                    }
+                }
+                
+                // 碰撞检测：敌人 vs 玩家
+                const pdx = player.x - enemy.x;
+                const pdy = player.y - enemy.y;
+                const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+                
+                if (pdist < player.radius + enemy.radius) {
+                    player.health -= 0.5;
+                    if (player.health <= 0) {
+                        alert(`游戏结束！\n分数: ${score}\n击杀: ${kills}\n生存: ${survival}秒`);
+                        location.reload();
+                        return;
+                    }
+                }
+                
+                // 绘制敌人
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                // 绘制飞机形状
+                ctx.save();
+                ctx.translate(enemy.x, enemy.y);
+                ctx.rotate(enemy.angle);
+                ctx.fillRect(-enemy.radius, -enemy.radius / 2, enemy.radius * 2, enemy.radius);
+                ctx.fillRect(-enemy.radius / 2, -enemy.radius, enemy.radius, enemy.radius * 2);
+                ctx.restore();
+                
+                // 敌人血条
+                ctx.fillStyle = '#f00';
+                ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2, 4);
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2 * (enemy.health / enemy.maxHealth), 4);
+            });
+            
+            // 更新粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].x += particles[i].dx;
+                particles[i].y += particles[i].dy;
+                particles[i].life--;
+                
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.fillStyle = particles[i].color;
+                ctx.globalAlpha = particles[i].life / 30;
+                ctx.beginPath();
+                ctx.arc(particles[i].x, particles[i].y, particles[i].radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            
+            // 绘制玩家
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            // 绘制飞机形状
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            ctx.fillRect(-player.radius, -player.radius / 2, player.radius * 2, player.radius);
+            ctx.fillRect(-player.radius / 2, -player.radius, player.radius, player.radius * 2);
+            ctx.restore();
+            
+            // 玩家血条
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(player.x - player.radius, player.y - player.radius - 10, player.radius * 2, 5);
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(player.x - player.radius, player.y - player.radius - 10, player.radius * 2 * (player.health / player.maxHealth), 5);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
