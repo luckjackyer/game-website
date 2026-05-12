@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑洞大作战 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin:0;
+            padding:0;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: linear-gradient(to bottom, #0a0a1a, #1a1a3a);
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+            display: block;
+            margin: 20px auto;
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin: 20px 0;">🌀 黑洞大作战</h1>
+        <div class="info">
+            <span>分数: <span id="score">0</span></span> | 
+            <span>大小: <span id="size">10</span></span> | 
+            <span>排名: <span id="rank">1</span>/8</span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = Math.min(800, window.innerWidth - 40);
+        canvas.height = Math.min(600, window.innerHeight - 150);
+        
+        let score = 0;
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            color: '#000'
+        };
+        
+        const objects = [];
+        const enemies = [];
+        let mouseX = player.x;
+        let mouseY = player.y;
+        
+        // 鼠标/触摸控制
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        });
+        
+        // 生成物体
+        function spawnObject() {
+            const size = Math.random() * 20 + 5;
+            objects.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: size,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`
+            });
+        }
+        
+        // 生成敌人
+        function spawnEnemy() {
+            const size = Math.random() * 30 + 10;
+            enemies.push({
+                x: Math.random() < 0.5 ? -50 : canvas.width + 50,
+                y: Math.random() * canvas.height,
+                radius: size,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                speed: 2
+            });
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            // 清空画布
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制星空背景
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 100; i++) {
+                const x = (Date.now() / 50 + i * 37) % canvas.width;
+                const y = (i * 73) % canvas.height;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            
+            // 玩家移动（朝向鼠标）
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > player.radius) {
+                player.x += (dx / dist) * 5;
+                player.y += (dy / dist) * 5;
+            }
+            
+            // 边界检查（从另一边出现）
+            if (player.x < -player.radius) player.x = canvas.width + player.radius;
+            if (player.x > canvas.width + player.radius) player.x = -player.radius;
+            if (player.y < -player.radius) player.y = canvas.height + player.radius;
+            if (player.y > canvas.height + player.radius) player.y = -player.radius;
+            
+            // 生成物体
+            if (objects.length < 50) {
+                spawnObject();
+            }
+            
+            // 生成敌人
+            if (enemies.length < 5) {
+                spawnEnemy();
+            }
+            
+            // 更新和绘制物体
+            objects.forEach((obj, index) => {
+                // 碰撞检测：玩家 vs 物体
+                const odx = player.x - obj.x;
+                const ody = player.y - obj.y;
+                const odist = Math.sqrt(odx * odx + ody * ody);
+                
+                if (odist < player.radius + obj.radius) {
+                    if (player.radius > obj.radius) {
+                        // 玩家吞噬物体
+                        objects.splice(index, 1);
+                        player.radius += obj.radius * 0.1;
+                        score += Math.floor(obj.radius);
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('size').textContent = Math.floor(player.radius);
+                    }
+                }
+                
+                // 绘制物体
+                ctx.fillStyle = obj.color;
+                ctx.beginPath();
+                ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 更新和绘制敌人
+            enemies.forEach((enemy, eIndex) => {
+                // 简单AI：朝向玩家移动
+                const edx = player.x - enemy.x;
+                const edy = player.y - enemy.y;
+                const edist = Math.sqrt(edx * edx + edy * edy);
+                
+                if (edist > enemy.radius + player.radius + 50) {
+                    enemy.x += (edx / edist) * enemy.speed;
+                    enemy.y += (edy / edist) * enemy.speed;
+                }
+                
+                // 碰撞检测：玩家 vs 敌人
+                const pdx = player.x - enemy.x;
+                const pdy = player.y - enemy.y;
+                const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+                
+                if (pdist < player.radius + enemy.radius) {
+                    if (player.radius > enemy.radius * 1.1) {
+                        // 玩家吞噬敌人
+                        enemies.splice(eIndex, 1);
+                        player.radius += enemy.radius * 0.2;
+                        score += Math.floor(enemy.radius * 10);
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('size').textContent = Math.floor(player.radius);
+                    } else {
+                        // 玩家被吞噬
+                        alert(`游戏结束！分数: ${score}`);
+                        location.reload();
+                        return;
+                    }
+                }
+                
+                // 绘制敌人
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 敌人眼睛
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(enemy.x - enemy.radius * 0.3, enemy.y - enemy.radius * 0.3, enemy.radius * 0.2, 0, Math.PI * 2);
+                ctx.arc(enemy.x + enemy.radius * 0.3, enemy.y - enemy.radius * 0.3, enemy.radius * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 绘制玩家（黑洞）
+            const gradient = ctx.createRadialGradient(
+                player.x, player.y, 0,
+                player.x, player.y, player.radius
+            );
+            gradient.addColorStop(0, '#000');
+            gradient.addColorStop(0.7, '#1a1a2e');
+            gradient.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 黑洞吸力效果
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                const angle = (Date.now() / 1000 + i * Math.PI / 4) % (Math.PI * 2);
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius * 1.5, angle, angle + 0.5);
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
