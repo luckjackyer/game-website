@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Venge.io - 3D多人射击游戏 | 免费在线玩</title>
+  <meta name="description" content="玩Venge.io风格3D射击游戏，免费浏览器游戏，无需下载，即点即玩！">
+  <link rel="stylesheet" href="../css/game.css">
+  <style>
+    #gameCanvas {
+      background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Venge.io - 3D射击竞技</h1>
+    <div class="game-info">
+      <p>🎮 选择角色，进入竞技场，成为最强射手！</p>
+      <p>🏆 击杀: <span id="kills">0</span> | 死亡: <span id="deaths">0</span> | K/D: <span id="kd">0.00</span></p>
+    </div>
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="controls">
+      <p><strong>操作:</strong> WASD移动 | 鼠标瞄准射击 | Shift冲刺 | 1-3切换武器</p>
+    </div>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+  </div>
+  
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let kills = 0, deaths = 0;
+    const players = [];
+    const bullets = [];
+    let keys = {};
+    let mouseX = 0, mouseY = 0;
+    let player = null;
+    let weapon = 1; // 1:手枪 2:霰弹枪 3:狙击枪
+    
+    // 初始化玩家
+    function initPlayer(name, x, y, color) {
+      return {
+        name: name,
+        x: x,
+        y: y,
+        size: 15,
+        speed: 3,
+        color: color,
+        hp: 100,
+        maxHp: 100,
+        lastShot: 0,
+        reloadTime: 0
+      };
+    }
+    
+    // 开始游戏
+    function startGame() {
+      player = initPlayer('Player', canvas.width/2, canvas.height/2, '#00f');
+      players.push(player);
+      
+      // 添加AI敌人
+      for (let i = 0; i < 5; i++) {
+        const ai = initPlayer(`Bot${i+1}`, 
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
+          '#f00'
+        );
+        ai.isAI = true;
+        players.push(ai);
+      }
+    }
+    
+    function shoot() {
+      const now = Date.now();
+      let cooldown = 0;
+      
+      switch(weapon) {
+        case 1: cooldown = 300; break; // 手枪
+        case 2: cooldown = 800; break; // 霰弹枪
+        case 3: cooldown = 1500; break; // 狙击枪
+      }
+      
+      if (now - player.lastShot < cooldown || player.reloadTime > now) return;
+      
+      const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+      
+      if (weapon === 2) {
+        // 霰弹枪：多发子弹
+        for (let i = -2; i <= 2; i++) {
+          bullets.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(angle + i * 0.1) * 8,
+            vy: Math.sin(angle + i * 0.1) * 8,
+            damage: 20,
+            color: '#ff0',
+            owner: player
+          });
+        }
+      } else {
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle) * (weapon === 3 ? 15 : 10),
+          vy: Math.sin(angle) * (weapon === 3 ? 15 : 10),
+          damage: weapon === 3 ? 100 : (weapon === 1 ? 25 : 50),
+          color: weapon === 3 ? '#f0f' : '#ff0',
+          owner: player
+        });
+      }
+      
+      player.lastShot = now;
+      
+      // 霰弹枪和狙击枪需要装弹
+      if (weapon === 2 || weapon === 3) {
+        player.reloadTime = now + 1500;
+      }
+    }
+    
+    function update() {
+      // 玩家移动
+      let speed = keys['Shift'] ? player.speed * 1.5 : player.speed;
+      if (keys['w'] || keys['ArrowUp']) player.y -= speed;
+      if (keys['s'] || keys['ArrowDown']) player.y += speed;
+      if (keys['a'] || keys['ArrowLeft']) player.x -= speed;
+      if (keys['d'] || keys['ArrowRight']) player.x += speed;
+      
+      // 边界
+      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+      
+      // 更新子弹
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].x += bullets[i].vx;
+        bullets[i].y += bullets[i].vy;
+        
+        if (bullets[i].x < 0 || bullets[i].x > canvas.width || 
+            bullets[i].y < 0 || bullets[i].y > canvas.height) {
+          bullets.splice(i, 1);
+          continue;
+        }
+        
+        // 检测命中
+        players.forEach(p => {
+          if (p === bullets[i].owner || p.hp <= 0) return;
+          
+          const dx = bullets[i].x - p.x;
+          const dy = bullets[i].y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < p.size) {
+            p.hp -= bullets[i].damage;
+            
+            if (p.hp <= 0) {
+              if (bullets[i].owner === player) {
+                kills++;
+              }
+              if (p === player) {
+                deaths++;
+              }
+              p.hp = p.maxHp;
+              p.x = Math.random() * canvas.width;
+              p.y = Math.random() * canvas.height;
+            }
+            
+            bullets.splice(i, 1);
+            updateStats();
+          }
+        });
+      }
+      
+      // AI行为
+      players.forEach(p => {
+        if (!p.isAI || p.hp <= 0) return;
+        
+        const distToPlayer = Math.sqrt(
+          Math.pow(p.x - player.x, 2) + 
+          Math.pow(p.y - player.y, 2)
+        );
+        
+        if (distToPlayer < 300) {
+          // 射击
+          const now = Date.now();
+          if (now - p.lastShot > 1000) {
+            const angle = Math.atan2(player.y - p.y, player.x - p.x);
+            bullets.push({
+              x: p.x,
+              y: p.y,
+              vx: Math.cos(angle) * 5,
+              vy: Math.sin(angle) * 5,
+              damage: 25,
+              color: '#f88',
+              owner: p
+            });
+            p.lastShot = now;
+          }
+        } else {
+          // 移动向玩家
+          const angle = Math.atan2(player.y - p.y, player.x - p.x);
+          p.x += Math.cos(angle) * p.speed;
+          p.y += Math.sin(angle) * p.speed;
+        }
+      });
+    }
+    
+    function updateStats() {
+      document.getElementById('kills').textContent = kills;
+      document.getElementById('deaths').textContent = deaths;
+      const kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
+      document.getElementById('kd').textContent = kd;
+    }
+    
+    function render() {
+      // 背景
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 网格
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      
+      // 子弹
+      bullets.forEach(b => {
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      // 玩家
+      players.forEach(p => {
+        if (p.hp <= 0) return;
+        
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 血条
+        const barWidth = 30;
+        const barHeight = 4;
+        const hpPercent = p.hp / p.maxHp;
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(p.x - barWidth/2, p.y - p.size - 10, barWidth, barHeight);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(p.x - barWidth/2, p.y - p.size - 10, barWidth * hpPercent, barHeight);
+        
+        // 名字
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.name, p.x, p.y - p.size - 15);
+      });
+      
+      // 武器显示
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'left';
+      const weaponNames = ['', '🔫 手枪', '🔫 霰弹枪', '🔫 狙击枪'];
+      ctx.fillText(`武器: ${weaponNames[weapon]}`, 10, 20);
+      
+      if (player.reloadTime > Date.now()) {
+        ctx.fillText('装弹中...', 10, 40);
+      }
+    }
+    
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+    
+    // 事件
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    
+    canvas.addEventListener('click', () => shoot());
+    
+    document.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.key >= '1' && e.key <= '3') {
+        weapon = parseInt(e.key);
+      }
+    });
+    
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+    
+    startGame();
+    gameLoop();
+  </script>
+</body>
+</html>
