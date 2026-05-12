@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>涂色大作战 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin:0;
+            padding:0;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: #f0f0f0;
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+            display: block;
+            margin: 20px auto;
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin: 20px 0;">🎨 涂色大作战</h1>
+        <div class="info">
+            <span>面积: <span id="score">0</span>%</span> | 
+            <span>排名: <span id="rank">1</span>/8</span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布大小
+        canvas.width = Math.min(800, window.innerWidth - 40);
+        canvas.height = Math.min(600, window.innerHeight - 150);
+        
+        const gridSize = 10;
+        const cols = Math.floor(canvas.width / gridSize);
+        const rows = Math.floor(canvas.height / gridSize);
+        
+        let score = 0;
+        let player = {
+            x: Math.floor(cols / 2),
+            y: Math.floor(rows / 2),
+            trail: [],
+            color: '#00ff88',
+            score: 0,
+            isMoving: false
+        };
+        
+        const enemies = [];
+        const grid = Array(rows).fill().map(() => Array(cols).fill(-1));
+        
+        let mouseX = player.x;
+        let mouseY = player.y;
+        
+        // 初始化玩家区域
+        for (let i = -2; i <= 2; i++) {
+            for (let j = -2; j <= 2; j++) {
+                const x = player.x + i;
+                const y = player.y + j;
+                if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                    grid[y][x] = 0;
+                }
+            }
+        }
+        
+        // 生成敌人
+        function spawnEnemies() {
+            const colors = ['#ff0080', '#0080ff', '#ff8000', '#80ff00', '#8000ff', '#00ff80', '#ff0080'];
+            for (let i = 1; i <= 7; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * cols);
+                    y = Math.floor(Math.random() * rows);
+                } while (grid[y][x] !== -1);
+                
+                enemies.push({
+                    id: i,
+                    x: x,
+                    y: y,
+                    dx: (Math.random() - 0.5) * 2,
+                    dy: (Math.random() - 0.5) * 2,
+                    trail: [],
+                    color: colors[i - 1],
+                    score: 0
+                });
+                
+                // 初始化敌人区域
+                for (let di = -1; di <= 1; di++) {
+                    for (let dj = -1; dj <= 1; dj++) {
+                        const nx = x + di;
+                        const ny = y + dj;
+                        if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && grid[ny][nx] === -1) {
+                            grid[ny][nx] = i;
+                        }
+                    }
+                }
+            }
+        }
+        
+        spawnEnemies();
+        
+        // 鼠标/触摸控制
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = Math.floor((e.clientX - rect.left) / gridSize);
+            mouseY = Math.floor((e.clientY - rect.top) / gridSize);
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = Math.floor((e.touches[0].clientX - rect.left) / gridSize);
+            mouseY = Math.floor((e.touches[0].clientY - rect.top) / gridSize);
+        });
+        
+        // 游戏循环
+        function gameLoop() {
+            // 清空画布
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (grid[i][j] === 0) {
+                        ctx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+                        ctx.fillRect(j * gridSize, i * gridSize, gridSize, gridSize);
+                    } else if (grid[i][j] > 0) {
+                        ctx.fillStyle = enemies[grid[i][j] - 1].color + '4d';
+                        ctx.fillRect(j * gridSize, i * gridSize, gridSize, gridSize);
+                    }
+                }
+            }
+            
+            // 玩家移动
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 2) {
+                player.x += dx / dist;
+                player.y += dy / dist;
+                
+                const gridX = Math.floor(player.x);
+                const gridY = Math.floor(player.y);
+                
+                if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
+                    if (grid[gridY][gridX] === -1) {
+                        grid[gridY][gridX] = 0;
+                        player.score++;
+                        score = Math.floor(player.score / (cols * rows) * 100);
+                        document.getElementById('score').textContent = score;
+                    }
+                }
+            }
+            
+            // 绘制玩家
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(player.x * gridSize + gridSize / 2, player.y * gridSize + gridSize / 2, gridSize * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 更新和绘制敌人
+            enemies.forEach((enemy, index) => {
+                // 简单AI：随机移动
+                if (Math.random() < 0.02) {
+                    enemy.dx = (Math.random() - 0.5) * 2;
+                    enemy.dy = (Math.random() - 0.5) * 2;
+                }
+                
+                enemy.x += enemy.dx;
+                enemy.y += enemy.dy;
+                
+                // 边界检查
+                if (enemy.x < 0 || enemy.x >= cols) enemy.dx *= -1;
+                if (enemy.y < 0 || enemy.y >= rows) enemy.dy *= -1;
+                
+                enemy.x = Math.max(0, Math.min(cols - 1, enemy.x));
+                enemy.y = Math.max(0, Math.min(rows - 1, enemy.y));
+                
+                const gridX = Math.floor(enemy.x);
+                const gridY = Math.floor(enemy.y);
+                
+                if (grid[gridY][gridX] === -1 || grid[gridY][gridX] === enemy.id) {
+                    grid[gridY][gridX] = enemy.id;
+                    enemy.score++;
+                }
+                
+                // 绘制敌人
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x * gridSize + gridSize / 2, enemy.y * gridSize + gridSize / 2, gridSize * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 绘制敌人眼睛
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(enemy.x * gridSize + gridSize * 0.3, enemy.y * gridSize + gridSize * 0.3, gridSize * 0.2, 0, Math.PI * 2);
+                ctx.arc(enemy.x * gridSize + gridSize * 0.7, enemy.y * gridSize + gridSize * 0.3, gridSize * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 更新排名
+            const allScores = [player.score, ...enemies.map(e => e.score)];
+            allScores.sort((a, b) => b - a);
+            const rank = allScores.indexOf(player.score) + 1;
+            document.getElementById('rank').textContent = rank;
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
