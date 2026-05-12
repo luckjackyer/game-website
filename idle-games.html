@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>挂机游戏 - 开心小游戏</title>
+    <meta name="description" content="免费在线挂机游戏，金币大师、Space Company等，挂机自动产出，轻松游戏！">
+    <link rel="canonical" href="https://game-website.liuage20061111.workers.dev/idle-games.html">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .category-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+        .category-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .game-count {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .search-box {
+            max-width: 600px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-box input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .search-box button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        .game-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .game-card {
+            position: relative;
+        }
+        .game-tag.new {
+            background: #4ecdc4;
+            color: white;
+        }
+        .game-tag.hot {
+            background: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎮 开心小游戏</h1>
+            <p class="slogan">免费在线小游戏，即开即玩</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="category-header">
+            <h1>💰 挂机游戏</h1>
+            <p class="game-count">共 <span id="gameCount">2</span> 款游戏</p>
+            <div class="search-box">
+                <input type="text" id="gameSearch" placeholder="搜索挂机游戏..." onkeyup="filterGames()">
+                <button onclick="clearSearch()">✕</button>
+            </div>
+        </div>
+
+        <section class="games-grid" id="gamesGrid">
+            <a href="games/idle-coin-master.html" class="game-card" data-tags="挂机,点击,金币">
+                <div class="game-tag new">🆕新游戏</div>
+                <div class="game-icon">💰</div>
+                <h2>金币大师</h2>
+                <p>点击获得金币，购买自动发生器，轻松挂机！</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+
+            <a href="games/space-company.html" class="game-card" data-tags="挂机,太空,经营">
+                <div class="game-tag hot">🔥热门</div>
+                <div class="game-icon">🚀</div>
+                <h2>太空公司</h2>
+                <p>太空挖矿题材增量游戏，自动产出资源！</p>
+                <span class="play-btn">开始游戏</span>
+            </a>
+        </section>
+
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="index.html" class="back-link">← 返回首页</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 开心小游戏 - 免费在线小游戏平台</p>
+        </div>
+    </footer>
+
+    <script>
+        function filterGames() {
+            const search = document.getElementById('gameSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.game-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                const desc = card.querySelector('p').textContent.toLowerCase();
+                const tags = card.getAttribute('data-tags').toLowerCase();
+
+                if (title.includes(search) || desc.includes(search) || tags.includes(search)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.getElementById('gameCount').textContent = visibleCount;
+        }
+
+        function clearSearch() {
+            document.getElementById('gameSearch').value = '';
+            filterGames();
+        }
+    </script>
+</body>
+</html>
