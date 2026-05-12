@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇大作战 - 开心小游戏</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <style>
+        body {
+            margin:0;
+            padding:0;
+            background:#1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 3px solid #16213e;
+            background: #0f3460;
+            box-shadow: 0 0 30px rgba(22, 33, 62, 0.8);
+            display: block;
+            margin: 20px auto;
+        }
+        .info {
+            color: #e94560;
+            margin: 20px;
+            font-size: 18px;
+        }
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 16px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← 返回首页</a>
+    
+    <div id="gameContainer">
+        <h1 style="color: #e94560; margin: 20px 0;">🐍 贪吃蛇大作战</h1>
+        <div class="info">
+            <span>分数: <span id="score">0</span></span> | 
+            <span>长度: <span id="length">10</span></span>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布大小
+        canvas.width = Math.min(1000, window.innerWidth - 40);
+        canvas.height = Math.min(700, window.innerHeight - 150);
+        
+        let score = 0;
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            segments: [],
+            dx: 5,
+            dy: 0,
+            radius: 15,
+            color: '#00ff88',
+            name: 'Player'
+        };
+        
+        // 初始化蛇身
+        for (let i = 0; i < 10; i++) {
+            player.segments.push({
+                x: player.x - i * player.radius * 2,
+                y: player.y
+            });
+        }
+        
+        const foods = [];
+        const enemies = [];
+        let mouseX = player.x;
+        let mouseY = player.y;
+        let gameOver = false;
+        
+        // 鼠标/触摸控制
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        });
+        
+        // 生成食物
+        function spawnFood() {
+            foods.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 5 + Math.random() * 5,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`
+            });
+        }
+        
+        // 生成敌人
+        function spawnEnemy() {
+            const length = 5 + Math.floor(Math.random() * 20);
+            const segments = [];
+            const startX = Math.random() * canvas.width;
+            const startY = Math.random() * canvas.height;
+            
+            for (let i = 0; i < length; i++) {
+                segments.push({
+                    x: startX - i * 10,
+                    y: startY
+                });
+            }
+            
+            enemies.push({
+                segments: segments,
+                radius: 10,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                dx: (Math.random() - 0.5) * 3,
+                dy: (Math.random() - 0.5) * 3,
+                targetX: Math.random() * canvas.width,
+                targetY: Math.random() * canvas.height,
+                changeTarget: 0
+            });
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            if (gameOver) return;
+            
+            // 清空画布
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格背景
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // 玩家移动（朝向鼠标）
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 5) {
+                player.dx = (dx / dist) * 5;
+                player.dy = (dy / dist) * 5;
+            }
+            
+            player.x += player.dx;
+            player.y += player.dy;
+            
+            // 边界检查（从另一边出现）
+            if (player.x < -player.radius) player.x = canvas.width + player.radius;
+            if (player.x > canvas.width + player.radius) player.x = -player.radius;
+            if (player.y < -player.radius) player.y = canvas.height + player.radius;
+            if (player.y > canvas.height + player.radius) player.y = -player.radius;
+            
+            // 更新蛇身
+            player.segments.unshift({x: player.x, y: player.y});
+            while (player.segments.length > parseInt(document.getElementById('length').textContent)) {
+                player.segments.pop();
+            }
+            
+            // 生成食物和敌人
+            if (foods.length < 100) {
+                for (let i = 0; i < 10; i++) {
+                    spawnFood();
+                }
+            }
+            if (enemies.length < 10) spawnEnemy();
+            
+            // 绘制食物
+            foods.forEach((food, index) => {
+                ctx.fillStyle = food.color;
+                ctx.beginPath();
+                ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 碰撞检测：玩家 vs 食物
+                const dist = Math.sqrt(
+                    Math.pow(player.x - food.x, 2) + 
+                    Math.pow(player.y - food.y, 2)
+                );
+                
+                if (dist < player.radius + food.radius) {
+                    foods.splice(index, 1);
+                    player.segments.push({}); // 增加长度
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    document.getElementById('length').textContent = player.segments.length;
+                }
+            });
+            
+            // 更新和绘制敌人
+            enemies.forEach((enemy, eIndex) => {
+                // AI移动
+                enemy.changeTarget++;
+                if (enemy.changeTarget > 100) {
+                    enemy.targetX = Math.random() * canvas.width;
+                    enemy.targetY = Math.random() * canvas.height;
+                    enemy.changeTarget = 0;
+                }
+                
+                const edx = enemy.targetX - enemy.segments[0].x;
+                const edy = enemy.targetY - enemy.segments[0].y;
+                const edist = Math.sqrt(edx * edx + edy * edy);
+                
+                if (edist > 5) {
+                    enemy.dx = (edx / edist) * 3;
+                    enemy.dy = (edy / edist) * 3;
+                }
+                
+                enemy.segments[0].x += enemy.dx;
+                enemy.segments[0].y += enemy.dy;
+                
+                // 敌人边界检查
+                if (enemy.segments[0].x < -enemy.radius) enemy.segments[0].x = canvas.width + enemy.radius;
+                if (enemy.segments[0].x > canvas.width + enemy.radius) enemy.segments[0].x = -enemy.radius;
+                if (enemy.segments[0].y < -enemy.radius) enemy.segments[0].y = canvas.height + enemy.radius;
+                if (enemy.segments[0].y > canvas.height + enemy.radius) enemy.segments[0].y = -enemy.radius;
+                
+                // 更新敌人蛇身
+                for (let i = 1; i < enemy.segments.length; i++) {
+                    const dx = enemy.segments[i-1].x - enemy.segments[i].x;
+                    const dy = enemy.segments[i-1].y - enemy.segments[i].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const gap = enemy.radius * 2;
+                    
+                    if (dist > gap) {
+                        enemy.segments[i].x += (dx / dist) * (dist - gap);
+                        enemy.segments[i].y += (dy / dist) * (dist - gap);
+                    }
+                }
+                
+                // 绘制敌人
+                enemy.segments.forEach((segment, index) => {
+                    ctx.fillStyle = enemy.color;
+                    ctx.beginPath();
+                    ctx.arc(segment.x, segment.y, enemy.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // 碰撞检测：玩家头 vs 敌人身体
+                for (let i = 1; i < enemy.segments.length; i++) {
+                    const dist = Math.sqrt(
+                        Math.pow(player.x - enemy.segments[i].x, 2) + 
+                        Math.pow(player.y - enemy.segments[i].y, 2)
+                    );
+                    
+                    if (dist < player.radius + enemy.radius) {
+                        // 玩家碰到敌人身体，游戏结束
+                        gameOver = true;
+                        alert(`游戏结束！分数: ${score}`);
+                        location.reload();
+                        return;
+                    }
+                }
+                
+                // 碰撞检测：玩家头 vs 敌人头
+                const headDist = Math.sqrt(
+                    Math.pow(player.x - enemy.segments[0].x, 2) + 
+                    Math.pow(player.y - enemy.segments[0].y, 2)
+                );
+                
+                if (headDist < player.radius + enemy.radius) {
+                    if (player.segments.length > enemy.segments.length) {
+                        // 玩家吃掉敌人
+                        enemies.splice(eIndex, 1);
+                        player.segments.push({}); // 增加长度
+                        score += enemy.segments.length * 10;
+                        document.getElementById('score').textContent = score;
+                        document.getElementById('length').textContent = player.segments.length;
+                    } else {
+                        // 玩家被吃掉
+                        gameOver = true;
+                        alert(`游戏结束！分数: ${score}`);
+                        location.reload();
+                        return;
+                    }
+                }
+            });
+            
+            // 绘制玩家
+            player.segments.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? player.color : '#00cc66';
+                ctx.beginPath();
+                ctx.arc(segment.x, segment.y, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 玩家眼睛
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(player.x - player.radius * 0.3, player.y - player.radius * 0.3, player.radius * 0.3, 0, Math.PI * 2);
+            ctx.arc(player.x + player.radius * 0.3, player.y - player.radius * 0.3, player.radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
