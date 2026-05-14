@@ -1,0 +1,14 @@
+{
+  "name": "game-website",
+  "version": "1.0.0",
+  "description": "Free online games collection",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build required - static HTML files'",
+    "preview": "echo 'Preview not available'",
+    "test": "echo 'No tests'"
+  },
+  "keywords": ["games", "html", "static"],
+  "author": "luckjackyer",
+  "license": "MIT"
+}
