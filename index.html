@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fun Games - Free Online Games</title>
-    <meta name="description" content="Free online games collection - Idle games, IO games, and more. Play now for free!">
+    <meta name="description" content="Free online games collection - Idle games, IO games, Classic games and more. Play now for free!">
     <link rel="canonical" href="https://game-website.liuage20061111.workers.dev/">
     <style>
         * {
@@ -213,7 +213,7 @@
             
             <div class="stats-banner">
                 <div class="stat-item">
-                    <span class="number" id="totalGames">3</span>
+                    <span class="number" id="totalGames">33</span>
                     <span class="label" data-i18n="games">Games</span>
                 </div>
                 <div class="stat-item">
@@ -232,25 +232,22 @@
                 <div class="category-icon">💰</div>
                 <h2 data-i18n="idleTitle">Idle Games</h2>
                 <p data-i18n="idleDesc">Relaxing idle games with auto-production. Perfect for casual gaming!</p>
-                <span class="game-count"><span data-i18n="games">Games</span>: <span id="idleCount">3</span></span>
+                <span class="game-count"><span data-i18n="games">Games</span>: <span id="idleCount">12</span></span>
             </a>
 
-            <!-- 未来可以添加更多分类 -->
-            <!--
             <a href="io-games.html" class="category-card">
-                <div class="category-icon">🎯</div>
-                <h2>IO Games</h2>
-                <p> competitive multiplayer games. Battle with players worldwide!</p>
-                <span class="game-count">Games: 5</span>
+                <div class="category-icon">🌐</div>
+                <h2 data-i18n="ioTitle">IO Games</h2>
+                <p data-i18n="ioDesc">Competitive multiplayer games. Battle with players worldwide!</p>
+                <span class="game-count"><span data-i18n="games">Games</span>: <span id="ioCount">11</span></span>
             </a>
 
-            <a href="arcade-games.html" class="category-card">
-                <div class="category-icon">🕹️</div>
-                <h2>Arcade Games</h2>
-                <p>Classic arcade games. Nostalgia and fun!</p>
-                <span class="game-count">Games: 8</span>
+            <a href="classic-games.html" class="category-card">
+                <div class="category-icon">🎲</div>
+                <h2 data-i18n="classicTitle">Classic Games</h2>
+                <p data-i18n="classicDesc">Nostalgic classic games. Puzzle, arcade and more!</p>
+                <span class="game-count"><span data-i18n="games">Games</span>: <span id="classicCount">10</span></span>
             </a>
-            -->
         </section>
 
         <section class="features">
@@ -295,6 +292,10 @@
                 free: 'Free',
                 idleTitle: 'Idle Games',
                 idleDesc: 'Relaxing idle games with auto-production. Perfect for casual gaming!',
+                ioTitle: 'IO Games',
+                ioDesc: 'Competitive multiplayer games. Battle with players worldwide!',
+                classicTitle: 'Classic Games',
+                classicDesc: 'Nostalgic classic games. Puzzle, arcade and more!',
                 whyChoose: 'Why Choose Us?',
                 feature1Title: 'Instant Play',
                 feature1Desc: 'No download, no installation. Play directly in your browser!',
@@ -314,6 +315,10 @@
                 free: '免费',
                 idleTitle: '挂机游戏',
                 idleDesc: '轻松挂机游戏，自动产出，适合休闲娱乐！',
+                ioTitle: 'IO 游戏',
+                ioDesc: '竞技多人在线游戏。与全球玩家对战！',
+                classicTitle: '经典游戏',
+                classicDesc: '怀旧经典游戏。益智、街机等多种类型！',
                 whyChoose: '为什么选择我们？',
                 feature1Title: '即开即玩',
                 feature1Desc: '无需下载，无需安装。直接在浏览器中游玩！',
@@ -343,17 +348,8 @@
             });
         }
 
-        // 统计游戏数量
-        function countGames() {
-            // 这里可以动态统计，目前硬编码
-            const idleGames = 3;
-            document.getElementById('totalGames').textContent = idleGames;
-            document.getElementById('idleCount').textContent = idleGames;
-        }
-
-        // 初始化
+        // Initialize
         applyLanguage();
-        countGames();
     </script>
 </body>
 </html>
