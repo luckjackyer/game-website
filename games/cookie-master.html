@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Master - 饼干大师</title>
+    <title>Cookie Master - Idle Clicker Game</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -25,16 +25,57 @@
             background: white;
             border-radius: 20px;
             padding: 30px;
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
-        h1 {
-            text-align: center;
-            color: #667eea;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
             font-size: 2.5em;
+            margin: 0;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-help {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-lang {
+            background: #ffc107;
+            color: #000;
         }
 
         .stats {
@@ -81,6 +122,7 @@
             font-size: 80px;
             transition: transform 0.1s;
             box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+            user-select: none;
         }
 
         #cookie:hover {
@@ -107,7 +149,7 @@
             transition: all 0.3s;
         }
 
-        .upgrade:hover {
+        .upgrade:hover:not(.locked) {
             background: #667eea;
             color: white;
             transform: translateY(-2px);
@@ -119,15 +161,9 @@
             cursor: not-allowed;
         }
 
-        .upgrade.locked:hover {
-            background: #f8f9fa;
-            color: inherit;
-            transform: none;
-            box-shadow: none;
-        }
-
         .upgrade h4 {
             margin-bottom: 5px;
+            font-size: 1.1em;
         }
 
         .upgrade p {
@@ -139,6 +175,10 @@
             color: #f5576c;
             font-weight: bold;
             margin-top: 5px;
+        }
+
+        .upgrade:hover:not(.locked) .cost {
+            color: #ffd700;
         }
 
         .achievements {
@@ -174,27 +214,103 @@
             color: #28a745;
             font-size: 0.9em;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .help-section {
+            margin-bottom: 20px;
+        }
+
+        .help-section h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+
+        .help-section p {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .help-section ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>🍪 Cookie Master</h1>
+        <div class="header">
+            <h1>🍪 <span data-i18n="title">Cookie Master</span></h1>
+            <div class="header-buttons">
+                <button class="btn btn-lang" onclick="toggleLanguage()">🌐 EN/中文</button>
+                <button class="btn btn-help" onclick="showHelp()">❓ <span data-i18n="help">Help</span></button>
+                <button class="btn btn-back" onclick="goBack()">🏠 <span data-i18n="back">Back</span></button>
+            </div>
+        </div>
         
         <div class="stats">
             <div class="stat-box">
-                <h3>Cookies</h3>
+                <h3 data-i18n="cookies">Cookies</h3>
                 <p id="cookies">0</p>
             </div>
             <div class="stat-box">
-                <h3>Per Click</h3>
+                <h3 data-i18n="perClick">Per Click</h3>
                 <p id="perClick">1</p>
             </div>
             <div class="stat-box">
-                <h3>Per Second</h3>
+                <h3 data-i18n="perSecond">Per Second</h3>
                 <p id="perSecond">0</p>
             </div>
             <div class="stat-box">
-                <h3>Total Clicks</h3>
+                <h3 data-i18n="totalClicks">Total Clicks</h3>
                 <p id="totalClicks">0</p>
             </div>
         </div>
@@ -205,61 +321,175 @@
 
         <div class="upgrades">
             <div class="upgrade" onclick="buyUpgrade(0)">
-                <h4>🖱️ Better Clicker</h4>
-                <p>双击饼干获得2倍饼干</p>
+                <h4>🖱️ <span data-i18n="upgrade0">Better Clicker</span></h4>
+                <p data-i18n="upgrade0desc">Double cookies per click</p>
                 <div class="cost">Cost: <span id="upgrade0Cost">10</span> 🍪</div>
             </div>
 
             <div class="upgrade" onclick="buyUpgrade(1)">
-                <h4>🤖 Auto Clicker</h4>
-                <p>自动点击饼干</p>
+                <h4>🤖 <span data-i18n="upgrade1">Auto Clicker</span></h4>
+                <p data-i18n="upgrade1desc">Automatically clicks for you</p>
                 <div class="cost">Cost: <span id="upgrade1Cost">50</span> 🍪</div>
             </div>
 
             <div class="upgrade" onclick="buyUpgrade(2)">
-                <h4>🏭 Cookie Factory</h4>
-                <p>每个工厂每秒生产5个饼干</p>
+                <h4>🏭 <span data-i18n="upgrade2">Cookie Factory</span></h4>
+                <p data-i18n="upgrade2desc">Produces 5 cookies per second</p>
                 <div class="cost">Cost: <span id="upgrade2Cost">200</span> 🍪</div>
             </div>
 
             <div class="upgrade" onclick="buyUpgrade(3)">
-                <h4>🚀 Cookie Planet</h4>
-                <p>每个星球每秒生产20个饼干</p>
+                <h4>🚀 <span data-i18n="upgrade3">Cookie Planet</span></h4>
+                <p data-i18n="upgrade3desc">Produces 20 cookies per second</p>
                 <div class="cost">Cost: <span id="upgrade3Cost">1000</span> 🍪</div>
             </div>
 
             <div class="upgrade" onclick="buyUpgrade(4)">
-                <h4>🌌 Cookie Universe</h4>
-                <p>每个宇宙每秒生产100个饼干</p>
+                <h4>🌌 <span data-i18n="upgrade4">Cookie Universe</span></h4>
+                <p data-i18n="upgrade4desc">Produces 100 cookies per second</p>
                 <div class="cost">Cost: <span id="upgrade4Cost">5000</span> 🍪</div>
             </div>
         </div>
 
         <div class="achievements">
-            <h3>🏆 Achievements</h3>
+            <h3>🏆 <span data-i18n="achievements">Achievements</span></h3>
             <div id="achievementsList"></div>
         </div>
 
         <div class="save-status" id="saveStatus"></div>
     </div>
 
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="howToPlay">How to Play</h2>
+                <button class="close-btn" onclick="closeHelp()">✖ Close</button>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="goal">Goal</h3>
+                <p data-i18n="goalDesc">Click the cookie to collect cookies. Use cookies to buy upgrades that automatically generate more cookies!</p>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="howTo">How to Play</h3>
+                <ul>
+                    <li data-i18n="tip1">🖱️ Click the big cookie to collect cookies</li>
+                    <li data-i18n="tip2">💰 Buy upgrades to increase your cookie production</li>
+                    <li data-i18n="tip3">🤖 Auto-clickers will generate cookies automatically</li>
+                    <li data-i18n="tip4">🏆 Unlock achievements as you progress</li>
+                    <li data-i18n="tip5">💾 Your game auto-saves every 30 seconds</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="tips">Tips</h3>
+                <ul>
+                    <li data-i18n="tip6">Focus on auto-production upgrades for passive income</li>
+                    <li data-i18n="tip7">Upgrade costs increase each time you buy them</li>
+                    <li data-i18n="tip8">Try to unlock all achievements!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Language strings
+        const LANG = {
+            en: {
+                title: 'Cookie Master',
+                help: 'Help',
+                back: 'Back',
+                cookies: 'Cookies',
+                perClick: 'Per Click',
+                perSecond: 'Per Second',
+                totalClicks: 'Total Clicks',
+                upgrade0: 'Better Clicker',
+                upgrade0desc: 'Double cookies per click',
+                upgrade1: 'Auto Clicker',
+                upgrade1desc: 'Automatically clicks for you',
+                upgrade2: 'Cookie Factory',
+                upgrade2desc: 'Produces 5 cookies per second',
+                upgrade3: 'Cookie Planet',
+                upgrade3desc: 'Produces 20 cookies per second',
+                upgrade4: 'Cookie Universe',
+                upgrade4desc: 'Produces 100 cookies per second',
+                achievements: 'Achievements',
+                howToPlay: 'How to Play',
+                goal: 'Goal',
+                goalDesc: 'Click the cookie to collect cookies. Use cookies to buy upgrades that automatically generate more cookies!',
+                howTo: 'How to Play',
+                tip1: '🖱️ Click the big cookie to collect cookies',
+                tip2: '💰 Buy upgrades to increase your cookie production',
+                tip3: '🤖 Auto-clickers will generate cookies automatically',
+                tip4: '🏆 Unlock achievements as you progress',
+                tip5: '💾 Your game auto-saves every 30 seconds',
+                tips: 'Tips',
+                tip6: 'Focus on auto-production upgrades for passive income',
+                tip7: 'Upgrade costs increase each time you buy them',
+                tip8: 'Try to unlock all achievements!',
+                firstClick: '👆 First Click',
+                clicks100: '💯 100 Clicks',
+                clicks1000: '🎯 1000 Clicks',
+                firstUpgrade: '⬆️ First Upgrade',
+                millionaire: '💰 Cookie Millionaire'
+            },
+            zh: {
+                title: 'Cookie Master',
+                help: '帮助',
+                back: '返回',
+                cookies: '饼干',
+                perClick: '每次点击',
+                perSecond: '每秒',
+                totalClicks: '总点击',
+                upgrade0: '更好点击器',
+                upgrade0desc: '双击饼干获得2倍饼干',
+                upgrade1: '自动点击器',
+                upgrade1desc: '自动点击饼干',
+                upgrade2: '饼干工厂',
+                upgrade2desc: '每个工厂每秒生产5个饼干',
+                upgrade3: '饼干星球',
+                upgrade3desc: '每个星球每秒生产20个饼干',
+                upgrade4: '饼干宇宙',
+                upgrade4desc: '每个宇宙每秒生产100个饼干',
+                achievements: '成就',
+                howToPlay: '游戏指南',
+                goal: '目标',
+                goalDesc: '点击饼干收集饼干。使用饼干购买升级，自动生成更多饼干！',
+                howTo: '如何玩',
+                tip1: '🖱️ 点击大饼干收集饼干',
+                tip2: '💰 购买升级来增加饼干产量',
+                tip3: '🤖 自动点击器会自动生成饼干',
+                tip4: '🏆 随着进展解锁成就',
+                tip5: '💾 游戏每30秒自动保存',
+                tips: '提示',
+                tip6: '专注于自动生产升级以获得被动收入',
+                tip7: '每次购买升级，成本都会增加',
+                tip8: '尝试解锁所有成就！',
+                firstClick: '👆 第一次点击',
+                clicks100: '💯 100次点击',
+                clicks1000: '🎯 1000次点击',
+                firstUpgrade: '⬆️ 第一次升级',
+                millionaire: '💰 饼干百万富翁'
+            }
+        };
+
+        let currentLang = 'en';
+
         let game = {
             cookies: 0,
             perClick: 1,
             perSecond: 0,
             totalClicks: 0,
-            upgrades: [0, 0, 0, 0, 0], // 每个升级的数量
+            upgrades: [0, 0, 0, 0, 0],
             upgradeCosts: [10, 50, 200, 1000, 5000],
             achievements: []
         };
 
         const ACHIEVEMENTS = [
-            { id: 'firstClick', name: '👆 First Click', condition: () => game.totalClicks >= 1 },
-            { id: '100Clicks', name: '💯 100 Clicks', condition: () => game.totalClicks >= 100 },
-            { id: '1000Clicks', name: '🎯 1000 Clicks', condition: () => game.totalClicks >= 1000 },
-            { id: 'firstUpgrade', name: '⬆️ First Upgrade', condition: () => game.upgrades.some(u => u > 0) },
-            { id: 'cookieMillionaire', name: '💰 Cookie Millionaire', condition: () => game.cookies >= 1000000 }
+            { id: 'firstClick', nameKey: 'firstClick', condition: () => game.totalClicks >= 1 },
+            { id: '100Clicks', nameKey: 'clicks100', condition: () => game.totalClicks >= 100 },
+            { id: '1000Clicks', nameKey: 'clicks1000', condition: () => game.totalClicks >= 1000 },
+            { id: 'firstUpgrade', nameKey: 'firstUpgrade', condition: () => game.upgrades.some(u => u > 0) },
+            { id: 'cookieMillionaire', nameKey: 'millionaire', condition: () => game.cookies >= 1000000 }
         ];
 
         // Load saved game
@@ -269,14 +499,14 @@
                 const savedGame = JSON.parse(saved);
                 Object.assign(game, savedGame);
                 updateDisplay();
-                showSaveStatus('Game loaded!');
+                showSaveStatus(LANG[currentLang]['goalDesc'] ? 'Game loaded!' : '游戏已加载！');
             }
         }
 
         // Save game
         function saveGame() {
             localStorage.setItem('cookieMaster', JSON.stringify(game));
-            showSaveStatus('Game saved!');
+            showSaveStatus(currentLang === 'en' ? 'Game saved!' : '游戏已保存！');
         }
 
         function clickCookie() {
@@ -292,7 +522,6 @@
                 game.cookies -= cost;
                 game.upgrades[index]++;
                 
-                // Update perClick and perSecond
                 if (index === 0) {
                     game.perClick = Math.pow(2, game.upgrades[0]);
                 } else if (index === 1) {
@@ -305,12 +534,11 @@
                     game.perSecond += 100;
                 }
                 
-                // Increase cost
                 game.upgradeCosts[index] = Math.floor(game.upgradeCosts[index] * 1.5);
                 
                 updateDisplay();
                 checkAchievements();
-                showSaveStatus('Upgrade purchased!');
+                showSaveStatus(currentLang === 'en' ? 'Upgrade purchased!' : '升级已购买！');
             }
         }
 
@@ -320,7 +548,6 @@
             document.getElementById('perSecond').textContent = formatNumber(game.perSecond);
             document.getElementById('totalClicks').textContent = formatNumber(game.totalClicks);
             
-            // Update upgrade costs
             for (let i = 0; i < 5; i++) {
                 document.getElementById(`upgrade${i}Cost`).textContent = formatNumber(game.upgradeCosts[i]);
             }
@@ -330,7 +557,7 @@
             ACHIEVEMENTS.forEach(ach => {
                 if (!game.achievements.includes(ach.id) && ach.condition()) {
                     game.achievements.push(ach.id);
-                    showSaveStatus(`Achievement unlocked: ${ach.name}!`);
+                    showSaveStatus(`🏆 ${LANG[currentLang][ach.nameKey]}!`);
                 }
             });
             displayAchievements();
@@ -342,7 +569,7 @@
             ACHIEVEMENTS.forEach(ach => {
                 const div = document.createElement('div');
                 div.className = 'achievement' + (game.achievements.includes(ach.id) ? ' unlocked' : '');
-                div.textContent = ach.name;
+                div.textContent = LANG[currentLang][ach.nameKey];
                 list.appendChild(div);
             });
         }
@@ -364,6 +591,35 @@
             }, 2000);
         }
 
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (LANG[currentLang][key]) {
+                    el.textContent = LANG[currentLang][key];
+                }
+            });
+            displayAchievements();
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        function goBack() {
+            if (confirm(currentLang === 'en' ? 'Return to game list? Your progress is auto-saved.' : '返回游戏列表？您的进度已自动保存。')) {
+                window.location.href = '../idle-games.html';
+            }
+        }
+
         // Auto save every 30 seconds
         setInterval(() => {
             saveGame();
@@ -378,6 +634,7 @@
 
         // Load game on start
         loadGame();
+        applyLanguage();
     </script>
 </body>
 </html>
