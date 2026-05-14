@@ -1,38 +1,97 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>经典小游戏 - 开心小游戏</title>
-    <meta name="description" content="免费在线经典小游戏，俄罗斯方块、贪吃蛇、扫雷等，即开即玩！">
-    <link rel="canonical" href="https://game-website.liage20061111.workers.dev/classic-games.html">
-    <link rel="stylesheet" href="css/style.css">
+    <title>Classic Games - Fun Free Online Games</title>
+    <meta name="description" content="Free online classic games, Tetris, Snake, Breakout and more. Play now for free!">
+    <link rel="canonical" href="https://game-website.liuage20061111.workers.dev/classic-games.html">
     <style>
+        * {
+            margin:0;
+            padding:0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin:0 auto;
+        }
+
         .category-header {
             text-align: center;
             padding: 40px 20px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             border-radius: 15px;
             margin-bottom: 40px;
         }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border:2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-lang {
+            background: #ffc107;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-lang:hover {
+            transform: translateY(-2px);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+
         .category-header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
         }
+
         .game-count {
             font-size: 1.2em;
-            opacity: 0.9;
+            opacity:0.9;
         }
+
         .search-box {
             max-width: 600px;
-            margin: 20px auto;
+            margin:20px auto;
             position: relative;
         }
+
         .search-box input {
-            width: 100%;
-            padding: 15px 50px 15px 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+            width:100%;
+            padding:15px 50px 15px 20px;
+            border:2px solid rgba(255,255,255,0.3);
             border-radius: 25px;
             background: rgba(255,255,255,0.1);
             color: white;
@@ -40,9 +99,16 @@
             outline: none;
             transition: all 0.3s;
         }
+
+        .search-box input:focus {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+
         .search-box input::placeholder {
             color: rgba(255,255,255,0.7);
         }
+
         .search-box button {
             position: absolute;
             right: 10px;
@@ -53,115 +119,240 @@
             color: white;
             font-size: 20px;
             cursor: pointer;
-            padding: 5px 10px;
+            padding:5px 10px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top:30px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            padding:20px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow:0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .game-icon {
+            font-size:60px;
+            margin:15px 0;
+        }
+
+        .game-card h2 {
+            color: #f5576c;
+            margin-bottom:10px;
+        }
+
+        .game-card p {
+            color: #666;
+            font-size:0.9em;
+            margin-bottom:15px;
+        }
+
+        .play-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding:10px 20px;
+            border-radius:20px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight:600;
+        }
+
+        .game-card:hover .play-btn {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .game-tag {
+            position: absolute;
+            top:10px;
+            right:10px;
+            padding:5px 10px;
+            border-radius:15px;
+            font-size:12px;
+            font-weight: bold;
+        }
+
+        .game-tag.new {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .game-tag.hot {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding:30px 0;
+            margin-top:50px;
+            opacity:0.8;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>🎮 开心小游戏</h1>
-            <p class="slogan">免费在线小游戏，即开即玩</p>
+    <div class="container">
+        <div class="header-top">
+            <a href="index.html" class="back-link">← <span data-i18n="back">Back to Home</span></a>
+            <button class="btn-lang" onclick="toggleLanguage()">🌐 EN/中文</button>
         </div>
-    </header>
 
-    <main class="container">
         <div class="category-header">
-            <h1>🎲 经典小游戏</h1>
-            <p class="game-count">共 <span id="gameCount">10</span> 款游戏</p>
-            <div class="search-box">
-                <input type="text" id="gameSearch" placeholder="搜索经典游戏..." onkeyup="filterGames()">
-                <button onclick="clearSearch()">✕</button>
-            </div>
+            <h1>🎲 <span data-i18n="title">Classic Games</span></h1>
+            <p data-i18n="subtitle">Nostalgic classic games, endless fun!</p>
+            <p class="game-count"><span data-i18n="gameCount">Total</span> <span id="gameCount">10</span> <span data-i18n="games">games</span></p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="gameSearch" data-i18n-placeholder="searchPlaceholder" placeholder="Search classic games..." onkeyup="filterGames()">
+            <button onclick="clearSearch()">✕</button>
         </div>
 
         <section class="games-grid" id="gamesGrid">
-            <a href="games/tetris.html" class="game-card" data-tags="益智,经典">
+            <a href="games/tetris.html" class="game-card" data-tags="puzzle,classic,blocks">
+                <div class="game-tag hot" data-i18n="hot">🔥 Hot</div>
                 <div class="game-icon">🎲</div>
-                <h2>俄罗斯方块</h2>
-                <p>旋转方块，消除行数，挑战最高分</p>
-                <span class="play-btn">开始游戏</span>
-                <span class="game-tag">🔥热门</span>
+                <h2>Tetris</h2>
+                <p data-i18n="tetrisDesc">Rotate blocks, clear lines, challenge high score!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/snake.html" class="game-card" data-tags="休闲,经典">
+            <a href="games/snake.html" class="game-card" data-tags="casual,classic,snake">
+                <div class="game-tag hot" data-i18n="hot">🔥 Hot</div>
                 <div class="game-icon">🐍</div>
-                <h2>贪吃蛇</h2>
-                <p>控制蛇吃食物长大，避免撞墙和撞到自己</p>
-                <span class="play-btn">开始游戏</span>
-                <span class="game-tag">🔥热门</span>
+                <h2>Snake</h2>
+                <p data-i18n="snakeDesc">Control the snake to eat food and grow, avoid walls!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/breakout.html" class="game-card" data-tags="动作,经典">
+            <a href="games/breakout.html" class="game-card" data-tags="action,classic,breakout">
                 <div class="game-icon">⚽</div>
-                <h2>弹球达人</h2>
-                <p>控制挡板反弹小球，击碎所有砖块</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Breakout</h2>
+                <p data-i18n="breakoutDesc">Control the paddle to bounce the ball and break all blocks!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/runner.html" class="game-card" data-tags="动作,跑酷">
+            <a href="games/runner.html" class="game-card" data-tags="action,runner,parkour">
                 <div class="game-icon">🏃</div>
-                <h2>极速跑酷</h2>
-                <p>躲避障碍物，挑战最高分</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Runner</h2>
+                <p data-i18n="runnerDesc">Dodge obstacles and challenge high score!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/plane.html" class="game-card" data-tags="射击,经典">
+            <a href="games/plane.html" class="game-card" data-tags="shooting,classic,airplane">
                 <div class="game-icon">✈️</div>
-                <h2>飞机大战</h2>
-                <p>经典飞行射击游戏，躲避子弹，击落敌机</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Plane Shooter</h2>
+                <p data-i18n="planeDesc">Classic shooting game, dodge bullets, shoot down enemies!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/2048.html" class="game-card" data-tags="益智,数字">
+            <a href="games/2048.html" class="game-card" data-tags="puzzle,numbers,strategy">
                 <div class="game-icon">🔢</div>
                 <h2>2048</h2>
-                <p>滑动方块，合并相同数字，挑战2048！</p>
-                <span class="play-btn">开始游戏</span>
+                <p data-i18n="2048Desc">Slide tiles, merge same numbers, challenge 2048!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/minesweeper.html" class="game-card" data-tags="益智,策略">
+            <a href="games/minesweeper.html" class="game-card" data-tags="puzzle,strategy,logic">
                 <div class="game-icon">💣</div>
-                <h2>扫雷</h2>
-                <p>经典扫雷游戏，挑战你的推理能力</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Minesweeper</h2>
+                <p data-i18n="minesweeperDesc">Classic minesweeper game, challenge your reasoning!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/sudoku.html" class="game-card" data-tags="益智,数字">
+            <a href="games/sudoku.html" class="game-card" data-tags="puzzle,numbers,logic">
                 <div class="game-icon">🔢</div>
-                <h2>数独</h2>
-                <p>逻辑推理，填入1-9，完成数独谜题</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Sudoku</h2>
+                <p data-i18n="sudokuDesc">Logical reasoning, fill in 1-9, complete Sudoku puzzles!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/timeshooter3.html" class="game-card" data-tags="射击,创意">
+            <a href="games/timeshooter3.html" class="game-card" data-tags="shooting,creative,time">
+                <div class="game-tag new" data-i18n="newGame">🆕 New</div>
                 <div class="game-icon">⏱️</div>
-                <h2>时间射击3</h2>
-                <p>在时间停止的世界中战斗，爽快射击！</p>
-                <span class="play-btn">开始游戏</span>
-                <span class="game-tag">🆕新游戏</span>
+                <h2>Time Shooter 3</h2>
+                <p data-i18n="timeDesc">Battle in a world where time stops, awesome shooting!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
 
-            <a href="games/wurstclient.html" class="game-card" data-tags="休闲,复古">
+            <a href="games/wurstclient.html" class="game-card" data-tags="casual,retro,client">
                 <div class="game-icon">🧩</div>
-                <h2>Wurst客户端</h2>
-                <p>经典游戏客户端，复古游戏体验！</p>
-                <span class="play-btn">开始游戏</span>
+                <h2>Wurst Client</h2>
+                <p data-i18n="wurstDesc">Classic game client, retro gaming experience!</p>
+                <span class="play-btn" data-i18n="play">Play Now</span>
             </a>
         </section>
 
-        <div style="text-align: center; margin: 40px 0;">
-            <a href="index.html" class="back-link">← 返回首页</a>
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 开心小游戏 - 免费在线小游戏平台</p>
-        </div>
-    </footer>
+        <footer>
+            <p>&copy; 2026 Fun Games - Free Online Games Platform</p>
+        </footer>
+    </div>
 
     <script>
+        const LANG = {
+            en: {
+                back: 'Back to Home',
+                title: 'Classic Games',
+                subtitle: 'Nostalgic classic games, endless fun!',
+                gameCount: 'Total',
+                games: 'games',
+                searchPlaceholder: 'Search classic games...',
+                newGame: '🆕 New',
+                hot: '🔥 Hot',
+                play: 'Play Now',
+                tetrisDesc: 'Rotate blocks, clear lines, challenge high score!',
+                snakeDesc: 'Control the snake to eat food and grow, avoid walls!',
+                breakoutDesc: 'Control the paddle to bounce the ball and break all blocks!',
+                runnerDesc: 'Dodge obstacles and challenge high score!',
+                planeDesc: 'Classic shooting game, dodge bullets, shoot down enemies!',
+                '2048Desc': 'Slide tiles, merge same numbers, challenge 2048!',
+                minesweeperDesc: 'Classic minesweeper game, challenge your reasoning!',
+                sudokuDesc: 'Logical reasoning, fill in 1-9, complete Sudoku puzzles!',
+                timeDesc: 'Battle in a world where time stops, awesome shooting!',
+                wurstDesc: 'Classic game client, retro gaming experience!'
+            },
+            zh: {
+                back: '返回首页',
+                title: '经典游戏',
+                subtitle: '怀旧经典游戏，无限乐趣！',
+                gameCount: '共',
+                games: '款游戏',
+                searchPlaceholder: '搜索经典游戏...',
+                newGame: '🆕 新游戏',
+                hot: '🔥 热门',
+                play: '开始游戏',
+                tetrisDesc: '旋转方块，消除行数，挑战最高分！',
+                snakeDesc: '控制蛇吃食物长大，避免撞墙和撞到自己！',
+                breakoutDesc: '控制挡板反弹小球，击碎所有砖块！',
+                runnerDesc: '躲避障碍物，挑战最高分！',
+                planeDesc: '经典飞行射击游戏，躲避子弹，击落敌机！',
+                '2048Desc': '滑动方块，合并相同数字，挑战2048！',
+                minesweeperDesc: '经典扫雷游戏，挑战你的推理能力！',
+                sudokuDesc: '逻辑推理，填入1-9，完成数独谜题！',
+                timeDesc: '在时间停止的世界中战斗，爽快射击！',
+                wurstDesc: '经典游戏客户端，复古游戏体验！'
+            }
+        };
+
+        let currentLang = 'en';
+
         function filterGames() {
             const search = document.getElementById('gameSearch').value.toLowerCase();
             const cards = document.querySelectorAll('.game-card');
@@ -187,6 +378,30 @@
             document.getElementById('gameSearch').value = '';
             filterGames();
         }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (LANG[currentLang][key]) {
+                    el.textContent = LANG[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (LANG[currentLang][key]) {
+                    el.placeholder = LANG[currentLang][key];
+                }
+            });
+        }
+
+        // Initialize
+        applyLanguage();
     </script>
 </body>
 </html>
