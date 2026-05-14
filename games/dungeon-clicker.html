@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dungeon Clicker - 地牢点击器</title>
+    <title>Dungeon Clicker - Idle RPG Game</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
+            margin:0;
+            padding:0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #434343 0%, #000000 100%);
             min-height: 100vh;
             padding: 20px;
@@ -21,15 +21,56 @@
 
         .game-container {
             max-width: 1000px;
-            margin: 0 auto;
+            margin:0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         h1 {
-            text-align: center;
             color: #ff6b6b;
-            margin-bottom: 20px;
+            margin:0;
             font-size: 2.5em;
-            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            text-shadow:0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow:0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-help {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-lang {
+            background: #ffc107;
+            color: #000;
         }
 
         .stats {
@@ -50,7 +91,7 @@
 
         .stat-box h3 {
             font-size: 0.9em;
-            opacity: 0.8;
+            opacity:0.8;
             margin-bottom: 5px;
         }
 
@@ -62,12 +103,12 @@
 
         .main-area {
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns:1fr 300px;
             gap: 20px;
         }
 
         .dungeon-area {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             border-radius: 15px;
             padding: 20px;
             min-height: 400px;
@@ -76,13 +117,13 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 2px solid rgba(255, 107, 107, 0.3);
+            border:2px solid rgba(255, 107, 107, 0.3);
             transition: all 0.3s;
         }
 
         .dungeon-area:hover {
             border-color: rgba(255, 107, 107, 0.8);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+            box-shadow:0 0 20px rgba(255, 107, 107, 0.3);
         }
 
         .enemy {
@@ -96,21 +137,21 @@
         }
 
         .enemy.defeated {
-            opacity: 0.3;
+            opacity:0.3;
             transform: scale(0.8);
         }
 
         .health-bar {
-            width: 100%;
+            width:100%;
             height: 20px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 10px0;
         }
 
         .health-fill {
-            height: 100%;
+            height:100%;
             background: linear-gradient(90deg, #ff6b6b 0%, #ffa500 100%);
             transition: width 0.3s;
         }
@@ -120,12 +161,14 @@
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border:1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            max-height:600px;
         }
 
         .upgrade {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border:1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 10px;
@@ -133,96 +176,172 @@
             transition: all 0.3s;
         }
 
-        .upgrade:hover {
+        .upgrade:hover:not(.locked) {
             background: rgba(255, 107, 107, 0.2);
-            border-color: #ff6b6b;
+            border-color:#ff6b6b;
             transform: translateX(5px);
         }
 
         .upgrade.locked {
-            opacity: 0.5;
+            opacity:0.5;
             cursor: not-allowed;
-        }
-
-        .upgrade.locked:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: none;
         }
 
         .upgrade h4 {
             margin-bottom: 5px;
-            color: #ff6b6b;
+            color:#ff6b6b;
         }
 
         .upgrade p {
-            font-size: 0.85em;
-            opacity: 0.8;
+            font-size:0.85em;
+            opacity:0.8;
             margin-bottom: 5px;
         }
 
         .cost {
-            color: #ffd700;
+            color:#ffd700;
             font-weight: bold;
         }
 
         .inventory {
-            margin-top: 30px;
+            margin-top:30px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border:1px solid rgba(255, 255, 255, 0.2);
         }
 
         .inventory h3 {
             margin-bottom: 15px;
-            color: #ff6b6b;
+            color:#ff6b6b;
         }
 
         .item {
             display: inline-block;
             background: rgba(255, 255, 255, 0.05);
             padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin:5px;
+            border-radius:5px;
+            border:1px solid rgba(255, 255, 255, 0.2);
         }
 
         .save-status {
             text-align: center;
-            margin-top: 20px;
-            color: #28a745;
-            font-size: 0.9em;
+            margin-top:20px;
+            color:#28a745;
+            font-size:0.9em;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width:768px) {
             .main-area {
-                grid-template-columns: 1fr;
+                grid-template-columns:1fr;
             }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background: rgba(0,0,0,0.7);
+            z-index:1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #222;
+            border-radius:20px;
+            padding:30px;
+            max-width:600px;
+            width:90%;
+            max-height:80vh;
+            overflow-y: auto;
+            border:1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom:20px;
+        }
+
+        .modal-header h2 {
+            color:#ff6b6b;
+            margin:0;
+        }
+
+        .close-btn {
+            background:#dc3545;
+            color: white;
+            border: none;
+            padding:8px15px;
+            border-radius:5px;
+            cursor: pointer;
+            font-size:0.9em;
+        }
+
+        .help-section {
+            margin-bottom:20px;
+        }
+
+        .help-section h3 {
+            color:#ffa500;
+            margin-bottom:10px;
+        }
+
+        .help-section p {
+            line-height:1.6;
+            color:#ccc;
+        }
+
+        .help-section ul {
+            margin-left:20px;
+            line-height:1.8;
+            color:#ccc;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>⚔️ Dungeon Clicker</h1>
+        <div class="header">
+            <h1>⚔️ <span data-i18n="title">Dungeon Clicker</span></h1>
+            <div class="header-buttons">
+                <button class="btn btn-lang" onclick="toggleLanguage()">🌐 EN/中文</button>
+                <button class="btn btn-help" onclick="showHelp()">❓ <span data-i18n="help">Help</span></button>
+                <button class="btn btn-back" onclick="goBack()">🏠 <span data-i18n="back">Back</span></button>
+            </div>
+        </div>
         
         <div class="stats">
             <div class="stat-box">
-                <h3>Gold</h3>
+                <h3 data-i18n="gold">Gold</h3>
                 <p id="gold">0</p>
             </div>
             <div class="stat-box">
-                <h3>Damage</h3>
+                <h3 data-i18n="damage">Damage</h3>
                 <p id="damage">1</p>
             </div>
             <div class="stat-box">
-                <h3>Level</h3>
+                <h3 data-i18n="level">Level</h3>
                 <p id="level">1</p>
             </div>
             <div class="stat-box">
-                <h3>Kills</h3>
+                <h3 data-i18n="kills">Kills</h3>
                 <p id="kills">0</p>
+            </div>
+            <div class="stat-box">
+                <h3 data-i18n="hp">HP</h3>
+                <p id="hp">100/100</p>
             </div>
         </div>
 
@@ -233,43 +352,155 @@
                     <div class="health-fill" id="enemyHealthBar"></div>
                 </div>
                 <p id="enemyName">Slime</p>
-                <p>HP: <span id="enemyHP">10</span> / <span id="enemyMaxHP">10</span></p>
+                <p data-i18n="hpLabel">HP: <span id="enemyHP">10</span> / <span id="enemyMaxHP">10</span></p>
             </div>
 
             <div class="upgrades">
-                <h3>⚔️ Upgrades</h3>
+                <h3>⚔️ <span data-i18n="upgrades">Upgrades</span></h3>
                 <div class="upgrade" onclick="buyUpgrade(0)">
-                    <h4>⚔️ Stronger Weapon</h4>
-                    <p>+1 Damage</p>
+                    <h4>⚔️ <span data-i18n="upgrade0">Stronger Weapon</span></h4>
+                    <p data-i18n="upgrade0desc">+1 Damage</p>
                     <div class="cost">Cost: <span id="upgrade0Cost">10</span> Gold</div>
                 </div>
                 <div class="upgrade" onclick="buyUpgrade(1)">
-                    <h4>🛡️ Armor</h4>
-                    <p>+10 Max HP</p>
+                    <h4>🛡️ <span data-i18n="upgrade1">Armor</span></h4>
+                    <p data-i18n="upgrade1desc">+10 Max HP</p>
                     <div class="cost">Cost: <span id="upgrade1Cost">50</span> Gold</div>
                 </div>
                 <div class="upgrade" onclick="buyUpgrade(2)">
-                    <h4>⚡ Critical Hit</h4>
-                    <p>5% Chance for 3x Damage</p>
+                    <h4>⚡ <span data-i18n="upgrade2">Critical Hit</span></h4>
+                    <p data-i18n="upgrade2desc">5% Chance for 3x Damage</p>
                     <div class="cost">Cost: <span id="upgrade2Cost">200</span> Gold</div>
                 </div>
                 <div class="upgrade" onclick="buyUpgrade(3)">
-                    <h4>🧙‍♂️ Auto Attack</h4>
-                    <p>Auto attack every 1s</p>
+                    <h4>🧙‍♂️ <span data-i18n="upgrade3">Auto Attack</span></h4>
+                    <p data-i18n="upgrade3desc">Auto attack every 1s</p>
                     <div class="cost">Cost: <span id="upgrade3Cost">1000</span> Gold</div>
                 </div>
             </div>
         </div>
 
         <div class="inventory">
-            <h3>🎒 Inventory</h3>
+            <h3>🎒 <span data-i18n="inventory">Inventory</span></h3>
             <div id="inventoryList"></div>
         </div>
 
         <div class="save-status" id="saveStatus"></div>
     </div>
 
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="howToPlay">How to Play</h2>
+                <button class="close-btn" onclick="closeHelp()">✖ Close</button>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="goal">Goal</h3>
+                <p data-i18n="goalDesc">Defeat enemies, collect gold, and become stronger! Battle your way through dungeons and defeat powerful bosses!</p>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="howTo">How to Play</h3>
+                <ul>
+                    <li data-i18n="tip1">⚔️ Click the enemy to attack</li>
+                    <li data-i18n="tip2">💰 Collect gold from defeated enemies</li>
+                    <li data-i18n="tip3">⬆️ Buy upgrades to become stronger</li>
+                    <li data-i18n="tip4">🎒 Find items from enemies (10% drop rate)</li>
+                    <li data-i18n="tip5">📈 Level up every 10 kills for more HP</li>
+                    <li data-i18n="tip6">🤖 Buy Auto Attack to fight automatically</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3 data-i18n="tips">Tips</h3>
+                <ul>
+                    <li data-i18n="tip7">Focus on upgrading your weapon first</li>
+                    <li data-i18n="tip8">Auto Attack helps when you're away</li>
+                    <li data-i18n="tip9">Enemies get stronger as you level up</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const LANG = {
+            en: {
+                title: 'Dungeon Clicker',
+                help: 'Help',
+                back: 'Back',
+                gold: 'Gold',
+                damage: 'Damage',
+                level: 'Level',
+                kills: 'Kills',
+                hp: 'HP',
+                hpLabel: 'HP: ',
+                upgrades: 'Upgrades',
+                upgrade0: 'Stronger Weapon',
+                upgrade0desc: '+1 Damage',
+                upgrade1: 'Armor',
+                upgrade1desc: '+10 Max HP',
+                upgrade2: 'Critical Hit',
+                upgrade2desc: '5% Chance for 3x Damage',
+                upgrade3: 'Auto Attack',
+                upgrade3desc: 'Auto attack every 1s',
+                inventory: 'Inventory',
+                howToPlay: 'How to Play',
+                goal: 'Goal',
+                goalDesc: 'Defeat enemies, collect gold, and become stronger! Battle your way through dungeons and defeat powerful bosses!',
+                howTo: 'How to Play',
+                tip1: '⚔️ Click the enemy to attack',
+                tip2: '💰 Collect gold from defeated enemies',
+                tip3: '⬆️ Buy upgrades to become stronger',
+                tip4: '🎒 Find items from enemies (10% drop rate)',
+                tip5: '📈 Level up every 10 kills for more HP',
+                tip6: '🤖 Buy Auto Attack to fight automatically',
+                tips: 'Tips',
+                tip7: 'Focus on upgrading your weapon first',
+                tip8: 'Auto Attack helps when you're away',
+                tip9: 'Enemies get stronger as you level up',
+                enemyNames: ['Slime', 'Bat', 'Skeleton', 'Dragon', 'Demon'],
+                levelUp: 'Level up! You are now level ',
+                itemDrop: 'Item dropped: ',
+                criticalHit: 'Critical Hit!'
+            },
+            zh: {
+                title: '地牢点击器',
+                help: '帮助',
+                back: '返回',
+                gold: '金币',
+                damage: '攻击力',
+                level: '等级',
+                kills: '击杀数',
+                hp: '生命值',
+                hpLabel: '生命值: ',
+                upgrades: '升级',
+                upgrade0: '更强武器',
+                upgrade0desc: '+1 攻击力',
+                upgrade1: '护甲',
+                upgrade1desc: '+10 最大生命值',
+                upgrade2: '暴击',
+                upgrade2desc: '5% 几率造成3倍伤害',
+                upgrade3: '自动攻击',
+                upgrade3desc: '每1秒自动攻击',
+                inventory: '背包',
+                howToPlay: '游戏指南',
+                goal: '目标',
+                goalDesc: '击败敌人，收集金币，变得更强！在地牢中战斗并击败强大的boss！',
+                howTo: '如何玩',
+                tip1: '⚔️ 点击敌人进行攻击',
+                tip2: '💰 从被击败的敌人那里收集金币',
+                tip3: '⬆️ 购买升级以变得更强',
+                tip4: '🎒 从敌人身上找到物品（10%掉落率）',
+                tip5: '📈 每击杀10个敌人升一级，获得更多生命值',
+                tip6: '🤖 购买自动攻击来自动战斗',
+                tips: '提示',
+                tip7: '优先升级你的武器',
+                tip8: '自动攻击在你离开时很有帮助',
+                tip9: '随着等级提升，敌人会变得更强大'
+            }
+        };
+
+        let currentLang = 'en';
+
         let game = {
             gold: 0,
             damage: 1,
@@ -310,10 +541,9 @@
 
             let dmg = game.damage;
             
-            // Critical hit
             if (game.upgrades[2] > 0 && Math.random() < 0.05 * game.upgrades[2]) {
                 dmg *= 3;
-                showSaveStatus('Critical Hit!');
+                showSaveStatus(LANG[currentLang]['criticalHit']);
             }
 
             game.enemy.hp -= dmg;
@@ -329,20 +559,18 @@
             game.gold += game.enemy.goldDrop;
             game.kills++;
 
-            // Level up
             if (game.kills >= game.level * 10) {
                 game.level++;
                 game.maxHP += 10;
                 game.currentHP = game.maxHP;
-                showSaveStatus(`Level up! You are now level ${game.level}!`);
+                showSaveStatus(LANG[currentLang]['levelUp'] + game.level + '!');
             }
 
-            // Drop item (10% chance)
             if (Math.random() < 0.1) {
                 const items = ['⚔️ Iron Sword', '🛡️ Leather Armor', '⚡ Magic Ring', '🧪 Health Potion'];
                 const item = items[Math.floor(Math.random() * items.length)];
                 game.inventory.push(item);
-                showSaveStatus(`Item dropped: ${item}!`);
+                showSaveStatus(LANG[currentLang]['itemDrop'] + item + '!');
                 updateInventory();
             }
 
@@ -350,9 +578,10 @@
         }
 
         function spawnEnemy() {
-            const enemyType = ENEMY_TYPES[Math.min(game.level - 1, ENEMY_TYPES.length - 1)];
+            const enemyIndex = Math.min(game.level - 1, ENEMY_TYPES.length - 1);
+            const enemyType = ENEMY_TYPES[enemyIndex];
             game.enemy = {
-                name: enemyType.name,
+                name: LANG[currentLang]['enemyNames'][enemyIndex],
                 icon: enemyType.icon,
                 hp: Math.floor(enemyType.baseHP * (1 + game.level * 0.5)),
                 maxHP: Math.floor(enemyType.baseHP * (1 + game.level * 0.5)),
@@ -384,7 +613,7 @@
 
                 game.upgradeCosts[index] = Math.floor(game.upgradeCosts[index] * 1.5);
                 updateDisplay();
-                showSaveStatus('Upgrade purchased!');
+                showSaveStatus(currentLang === 'en' ? 'Upgrade purchased!' : '升级已购买！');
             }
         }
 
@@ -401,14 +630,13 @@
             document.getElementById('damage').textContent = game.damage;
             document.getElementById('level').textContent = game.level;
             document.getElementById('kills').textContent = game.kills;
+            document.getElementById('hp').textContent = Math.floor(game.currentHP) + '/' + game.maxHP;
 
-            // Update enemy display
             const hpPercent = (game.enemy.hp / game.enemy.maxHP) * 100;
             document.getElementById('enemyHealthBar').style.width = hpPercent + '%';
             document.getElementById('enemyHP').textContent = Math.max(0, game.enemy.hp);
             document.getElementById('enemyMaxHP').textContent = game.enemy.maxHP;
 
-            // Update upgrade costs
             for (let i = 0; i < 4; i++) {
                 document.getElementById(`upgrade${i}Cost`).textContent = formatNumber(game.upgradeCosts[i]);
             }
@@ -450,19 +678,45 @@
             const saved = localStorage.getItem('dungeonClicker');
             if (saved) {
                 game = JSON.parse(saved);
-                showSaveStatus('Game loaded!');
+                showSaveStatus(currentLang === 'en' ? 'Game loaded!' : '游戏已加载！');
             }
         }
 
         function startGameLoop() {
-            // Auto-save every 30 seconds
             setInterval(() => {
                 saveGame();
-                showSaveStatus('Game saved!');
             }, 30000);
         }
 
-        // Initialize game
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            applyLanguage();
+            spawnEnemy();
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (LANG[currentLang][key]) {
+                    el.textContent = LANG[currentLang][key];
+                }
+            });
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        function goBack() {
+            if (confirm(currentLang === 'en' ? 'Return to game list? Your progress is auto-saved.' : '返回游戏列表？您的进度已自动保存。')) {
+                window.location.href = '../idle-games.html';
+            }
+        }
+
         init();
     </script>
 </body>
